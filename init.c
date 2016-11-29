@@ -104,7 +104,7 @@ int steven()
         uart0_printhex32(_query_code(begin));
     }
 
-    _test();
+    //_test();
     //do_swi();
 
     uart0_printf("steven222\n");

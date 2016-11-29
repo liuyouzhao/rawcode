@@ -34,10 +34,8 @@ int tick_loop(void (*printf)(const char*))
 {
     while(1)
     {
-
         if(*(TIMER0 + TIMER_MIS)) {
 	        *(TIMER0 + TIMER_INTCLR) = 1;
-	        do_swi();
 	        printf("tick\n");
         }
       

@@ -1,5 +1,4 @@
-#include <versatile.h>
-#define CONFIG_SYS_TEXT_BASE		0x10000
+.code 32
 
 .globl _start
 _start:
@@ -31,12 +30,26 @@ _start:
 	
 	
 __reset:
-    MRS r1, cpsr
-    BIC r1, r1, #0x40
-    MSR cpsr_c, r1
-    mov sp,#0x20000
-    bl steven
-    b .
+     LDR sp, =stack_top
+     
+     MRS r1, cpsr
+     BIC r1, r1, #0x80
+     mov r2, r1
+     MSR cpsr_c, r1
+
+     and r1, #0x12
+     MSR cpsr_c, r1
+     LDR sp, =isr_stack_top
+
+     and r1, #0x13
+     MSR cpsr_c, r1
+     LDR sp, =svc_stack_top
+
+     MSR cpsr_c, r2
+
+     BL steven
+     B .
+
     
     
 .globl _test
@@ -90,13 +103,12 @@ __not_used:
     not_used_handle:.word not_used
     
 __irq:
+    /* TODO: do all registers processing steps */
     ldr	pc, irq_handle
     bx lr
     irq_handle:.word irq
     
 __fiq:
-    ldr r0, =0x0101f1000
-	str r0, [r0]
     ldr	pc, fiq_handle
     bx lr
     fiq_handle:.word fiq
