@@ -1,57 +1,46 @@
-#include "versatile.h"
 
-#define TIMER_LOAD_VAL 0xffffffff
+#define PIC ((volatile unsigned int*)0x10140000)
+#define PIC_INT_ENABLE (volatile unsigned int*)0x10140010
+#define PIC_TIMER01 0x10
+#define VIC_INTENABLE 0x4 /* 0x10 bytes */
 
-#define READ_TIMER (*(volatile ulong *)(CONFIG_SYS_TIMERBASE+4))
 
-#define TIMER_ENABLE	(1 << 7)
-#define TIMER_MODE_MSK	(1 << 6)
-#define TIMER_MODE_FR	(0 << 6)
-#define TIMER_MODE_PD	(1 << 6)
+#define TIMER0 ((volatile unsigned int*)0x101E2000)
+#define TIMER_VALUE 0x1 /* 0x04 bytes */
+#define TIMER_CONTROL 0x2 /* 0x08 bytes */
+#define TIMER_INTCLR 0x3 /* 0x0C bytes */
+#define TIMER_MIS 0x5 /* 0x14 bytes */
+#define TIMER_EN 0x80
+#define TIMER_PERIODIC 0x40
+#define TIMER_INTEN 0x20
+#define TIMER_32BIT 0x02
+#define TIMER_ONESHOT 0x01
 
-#define TIMER_INT_EN	(1 << 5)
-#define TIMER_PRS_MSK	(3 << 2)
-#define TIMER_PRS_8S	(1 << 3)
-#define TIMER_SIZE_MSK	(1 << 2)
-#define TIMER_ONE_SHT	(1 << 0)
-
-typedef unsigned long ulong;
+typedef int ulong;
 
 ulong lastdec;
 ulong timestamp;
 
 int timer_init (void)
 {
-	ulong	tmr_ctrl_val;
-
-	/* 1st disable the Timer */
-	tmr_ctrl_val = *(volatile ulong *)(CONFIG_SYS_TIMERBASE + 8);
-	tmr_ctrl_val &= ~TIMER_ENABLE;
-	*(volatile ulong *)(CONFIG_SYS_TIMERBASE + 8) = tmr_ctrl_val;
-
-	/*
-	 * The Timer Control Register has one Undefined/Shouldn't Use Bit
-	 * So we should do read/modify/write Operation
-	 */
-
-	/*
-	 * Timer Mode : Free Running
-	 * Interrupt : Disabled
-	 * Prescale : 8 Stage, Clk/256
-	 * Tmr Siz : 16 Bit Counter
-	 * Tmr in Wrapping Mode
-	 */
-	tmr_ctrl_val = *(volatile ulong *)(CONFIG_SYS_TIMERBASE + 8);
-	tmr_ctrl_val &= ~(TIMER_MODE_MSK | TIMER_PRS_MSK | TIMER_SIZE_MSK | TIMER_ONE_SHT );
-	tmr_ctrl_val |= TIMER_INT_EN;
-	tmr_ctrl_val |= (TIMER_ENABLE | TIMER_PRS_8S);
-
-	*(volatile ulong *)(CONFIG_SYS_TIMERBASE + 8) = tmr_ctrl_val;
-
-	/* reset time */
-	lastdec = READ_TIMER;  /* capure current decrementer value time */
-	timestamp = 0;	       /* start "advancing" time stamp from 0 */
-
+    *(PIC_INT_ENABLE) |= (1 << 4) | (1 << 5);
+	*(PIC + VIC_INTENABLE) = PIC_TIMER01;
+    *TIMER0 = 1000000;
+    *(TIMER0 + TIMER_CONTROL) = TIMER_EN | TIMER_PERIODIC | TIMER_32BIT | TIMER_INTEN;
 	return 0;
 }
 
+int tick_loop(void (*printf)(const char*))
+{
+    while(1)
+    {
+
+        if(*(TIMER0 + TIMER_MIS)) {
+	        *(TIMER0 + TIMER_INTCLR) = 1;
+	        do_swi();
+	        printf("tick\n");
+        }
+      
+    }
+    
+}

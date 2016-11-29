@@ -20,26 +20,26 @@ void uart0_printf(const char* text)
         tmp ++;
     }
 }
-/*
-    ldr pc, _reset
-	ldr	pc, _undefined_instruction
-	ldr	pc, _software_interrupt
-	ldr	pc, _prefetch_abort //12
-	ldr	pc, _data_abort  //16
-	ldr	pc, _not_used  //20
-	ldr	pc, _irq  //24
-	ldr	pc, _fiq  //28
-*/
 
+void uart0_printhex32(int hex)
+{
+    int i = 0;
+    int l = 0;
+    int r = 0;
+    *(_p_uart0_start_) = '0';
+    *(_p_uart0_start_) = 'x';
+    for(i = 3; i >= 0; i -= 1)
+    {
+        l = (((hex >> (i * 8)) & 0xff) >> 4);
+        r = (((hex >> (i * 8)) & 0xff) % 16);
+        l = l > 9 ? l + 55 : l + 48;
+        r = r > 9 ? r + 55 : r + 48;
 
-volatile int (*_reset) = (int*) 0x10140000;
-volatile int (*_undefined_instruction) = 0x10140000 + 4;
-volatile int (*_software_interrupt) = 0x10140000 + 8;
-volatile int (*_prefetch_abort) = 0x10140000 + 12;
-volatile int (*_data_abort) = 0x10140000 + 16;
-volatile int (*_not_used) = 0x10140000 + 20;
-volatile int (*_irq) = 0x10140000 + 24;
-volatile int (*_fiq) = 0x10140000 + 28;
+        *_p_uart0_start_ = l;
+        *_p_uart0_start_ = r;
+    }
+    *(_p_uart0_start_) = '\n';
+}
 
 
 void reset()
@@ -52,9 +52,15 @@ void undefined_instruction()
     uart0_printf("111\n");
 }
 
-void software_interrupt()
+void software_interrupt(unsigned int inst, unsigned int sp)
 {
-    uart0_printf("222\n");
+    uart0_printf("[software_interrupt]\n");
+    uart0_printhex32(inst);
+    uart0_printhex32(sp);
+    uart0_printhex32(_query_code(sp + 0x0));
+    uart0_printhex32(_query_code(sp + 0x4));
+    uart0_printhex32(_query_code(sp + 0x8));
+    uart0_printf("[software_interrupt end]\n");
 }
 
 void prefetch_abort()
@@ -75,6 +81,7 @@ void not_used()
 void irq()
 {
     uart0_printf("666\n");
+    uart0_printf("irq interrupt came!\n");
 }
 
 void fiq()
@@ -82,26 +89,29 @@ void fiq()
     uart0_printf("777\n");
 }
 
-
-
-
 int steven()
 {
-    uart0_printf("steven\n");
-#if 1
-	*_reset = reset;
-	*_undefined_instruction = undefined_instruction;
-	*_software_interrupt = software_interrupt;
-	*_prefetch_abort = prefetch_abort;
-	*_data_abort = data_abort;
-    *_not_used = not_used;
-	*_irq = irq;
-    *_fiq = fiq;
-#endif
-    timer_init();
-    uart0_printf("steven222\n");
+    int begin = 0x0;
+    int cmd = 0x0;
+    
+    uart0_printf("steven111\n");
 
-	while(1);
+    
+    for(begin = 0x0; begin < 0x80; begin += 0x4)
+    {
+        cmd = _query_code(0x10000 + begin);
+        _insert_code(cmd, begin);
+        uart0_printhex32(_query_code(begin));
+    }
+
+    _test();
+    //do_swi();
+
+    uart0_printf("steven222\n");
+    
+    timer_init();
+
+    tick_loop(uart0_printf);
 
     return 0;
 }
@@ -121,35 +131,5 @@ void pthread_2()
         uart0_printf("pthread_2\n");
     }
 }
-
-
-#define TIMER0_BASE 0x101e2000
-
-int kernel()
-{
-    //*((int*)(_p_registers_->lr)) = (int) pthread_1; 
-
-     
-
-    asm(
-        "B pthread_1;"
-    );
-
-//    while(1)
-    {
-        uart0_printf("kernel while..\n");
-    }
-    return 0;
-}
-
-int timer = 0;
-void Timer0_Handle(void)
-{
-    //char buf[32] = {0};
-    //sprintf(buf, "timer: %d\n", timer);
-    //uart0_printf(buf);
-    uart0_printf("timer0---->\n");
-}
-
 
 
