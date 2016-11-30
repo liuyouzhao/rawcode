@@ -64,26 +64,31 @@ _start:
  * 0b11111 SYSTEM     PC,R14-R0,CPSR(ARM v4+)
 */
 __reset:
-     LDR sp, =stack_top
+    LDR sp, =stack_top
 
-     MRS r1, cpsr       /* read cpsr content into r1 */
-     BIC r1, r1, #0x80  /* bit clean, clean x ub x000 0000 */
-     mov r2, r1         /* backup to r2, why? */
-     MSR cpsr_c, r1     /* only set control bits[0-7] */
+     /* open IRQ */
+    MRS r1, cpsr       /* read cpsr content into r1 */
+    BIC r1, r1, #0x80  /* bit clean, clean x000 0000 */
+    mov r2, r1         /* backup to r2, why? */
+    MSR cpsr_c, r1     /* only set control bits[0-7] */
+    and r1, #0x12
+    MSR cpsr_c, r1
 
+     /* close FIQ */
+    MRS r1, cpsr
+    ORR r1, r1, #0x40  /* bit clean, 0x00 0000 close FIQ */
+    MSR cpsr_c, r1
 
-     and r1, #0x12
-     MSR cpsr_c, r1
-     LDR sp, =isr_stack_top
+    LDR sp, =isr_stack_top
 
-     and r1, #0x13
-     MSR cpsr_c, r1
-     LDR sp, =svc_stack_top
+    and r1, #0x13
+    MSR cpsr_c, r1
+    LDR sp, =svc_stack_top
 
-     MSR cpsr_c, r2
+    MSR cpsr_c, r2
 
-     BL steven
-     B .
+    BL steven
+    B .
 
     
     
@@ -138,11 +143,26 @@ __not_used:
     not_used_handle:.word not_used
     
 __irq:
-    /* TODO: do all registers processing steps */
-    ldr	pc, irq_handle
-    bx lr
-    irq_handle:.word irq
+    push {lr}
+/*    ldr r0,[lr,#-4]*/
+/*    mov r1,sp */
+    bl irq
+    pop {lr}
+    movs pc,lr
     
+    
+ /*   subs pc, lr, #4
+    mov r9, lr
+    bl irq*/
+/*    ldr	pc, irq_handle */
+/*    irq_handle:.word irq */
+    
+/*__irq_revert:
+    mov r14, r13
+    subs pc, r14, #4
+*/
+
+
 __fiq:
     ldr	pc, fiq_handle
     bx lr

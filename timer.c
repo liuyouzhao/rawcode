@@ -30,15 +30,22 @@ int timer_init (void)
 	return 0;
 }
 
+int t = 0;
 int tick_loop(void (*printf)(const char*))
 {
     while(1)
     {
-        if(*(TIMER0 + TIMER_MIS)) {
-	        *(TIMER0 + TIMER_INTCLR) = 1;
-	        printf("tick\n");
-        }
-      
+//        if((t++) == 100000) {
+            printf("=====================================tick\n");
+//            t = 0;
+ //       }
     }
-    
+}
+
+
+int tick_done()
+{
+    if(*(TIMER0 + TIMER_MIS)) {
+        *(TIMER0 + TIMER_INTCLR) = 1;
+    }
 }

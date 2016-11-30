@@ -44,7 +44,7 @@ void uart0_printhex32(int hex)
 
 void reset()
 {
-	uart0_printf("reset\n");
+    uart0_printf("reset\n");
 }
 
 void undefined_instruction()
@@ -80,8 +80,13 @@ void not_used()
 
 void irq()
 {
+    tick_done();
     uart0_printf("666\n");
     uart0_printf("irq interrupt came!\n");
+#if 0
+    asm("mov lr, r9");
+    asm("subs pc, lr, #4");
+#endif
 }
 
 void fiq()
