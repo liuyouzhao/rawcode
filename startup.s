@@ -142,13 +142,13 @@ __not_used:
     bx lr
     not_used_handle:.word not_used
     
-__irq:
-    push {lr}
 /*    ldr r0,[lr,#-4]*/
 /*    mov r1,sp */
+__irq:
+    push {lr}
     bl irq
     pop {lr}
-    movs pc,lr
+    subs pc,lr,#4
     
     
  /*   subs pc, lr, #4
