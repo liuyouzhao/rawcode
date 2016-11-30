@@ -1,5 +1,11 @@
 .code 32
 
+/* _start entry
+ * vector interrupt table:
+ * 0x00: ldr pc, _reset
+ * 0x04: ldr pc, _software_interrupt
+ * .....
+*/
 .globl _start
 _start:
     ldr pc, _reset //00
@@ -29,13 +35,42 @@ _start:
     .balignl 16,0xdeadbeef
 	
 	
+/* enable irq
+ * mrs: read from cpsr/spsr
+ * c[control]   psr[0-7]
+ * x[extension] psr[8-15]
+ * s[statement] psr[16-23]
+ * f[flag]      psr[24-31]
+ *
+ * The Status register:
+ * cpsr[current processor status register]
+ * spsr[saved processor status register]
+
+ * |31 30 29 28    7  6  5   4  3  2  1  0|
+ * | N  Z  C  V....I  F  T  M4 M3 M2 M1 M0|
+ * [N] save as calc-res bit[31],1(>=0),0(<0)
+ * [Z] calc-res of CMP, 1(=0),0(!=0)
+ * [C] sum&sub,carrybit or borrowbit
+ * cpsr_c: 0-7
+ *
+ * *** M[0-4] ***
+ * M0-M4   mode       accessable
+ * ob10000 user       pc,r14~r0,CPSR
+ * 0b10001 FIQ        PC,R14_FIQ-R8_FIQ,R7~R0,CPSR,SPSR_FIQ
+ * 0b10010 IRQ        PC,R14_IRQ-R13_IRQ,R12~R0,CPSR,SPSR_IRQ
+ * 0B10011 SUPERVISOR PC,R14_SVC-R13_SVC,R12~R0,CPSR,SPSR_SVC
+ * 0b10111 ABORT      PC,R14_ABT-R13_ABT,R12~R0,CPSR,SPSR_ABT
+ * 0b11011 UNDEFINEED PC,R14_UND-R8_UND,R12~R0,CPSR,SPSR_UND
+ * 0b11111 SYSTEM     PC,R14-R0,CPSR(ARM v4+)
+*/
 __reset:
      LDR sp, =stack_top
-     
-     MRS r1, cpsr
-     BIC r1, r1, #0x80
-     mov r2, r1
-     MSR cpsr_c, r1
+
+     MRS r1, cpsr       /* read cpsr content into r1 */
+     BIC r1, r1, #0x80  /* bit clean, clean x ub x000 0000 */
+     mov r2, r1         /* backup to r2, why? */
+     MSR cpsr_c, r1     /* only set control bits[0-7] */
+
 
      and r1, #0x12
      MSR cpsr_c, r1

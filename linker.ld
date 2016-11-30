@@ -24,6 +24,17 @@
  */
 
 
+
+/**
+ * |-------------------------------------------------|
+ * [text+data+bss]0x10000---0x14000
+ * [stack]        0x14000---0x18000
+ * [svc_stack]    0x18000---0x22000 (supervisor calls)
+ * [isr_stack]    0x22000---0x26000 (interrupt status register)
+ * [task_stack]   0x26000---0x826000
+ * [heap_low]     0x826000--0x836000 (what's this?)
+ * [heap]         0x836000-- 
+*/
 ENTRY(_start)
 SECTIONS
 {
