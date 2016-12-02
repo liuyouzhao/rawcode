@@ -145,26 +145,28 @@ _start:
  * 0b11111 SYSTEM     PC,R14-R0,CPSR(ARM v4+)
 */
 __reset:
-    LDR sp, =stack_top
+    LDR sp, =stack_top /* sp is normal R13, set normal stack_top */
 
      /* open IRQ */
     MRS r1, cpsr       /* read cpsr content into r1 */
     BIC r1, r1, #0x80  /* bit clean, clean x000 0000 */
     mov r2, r1         /* backup to r2, why? */
     MSR cpsr_c, r1     /* only set control bits[0-7] */
+    
+    /* switch to IRQ mode */
     and r1, #0x12
-    MSR cpsr_c, r1
+    MSR cpsr_c, r1     /* switch to IRQ mode, sp is sp_irq */
+    LDR sp, =isr_stack_top /* set sp_irq to isr_stack_top */
 
-     /* close FIQ */
+    /* close FIQ */
     MRS r1, cpsr
     ORR r1, r1, #0x40  /* bit clean, 0x00 0000 close FIQ */
     MSR cpsr_c, r1
 
-    LDR sp, =isr_stack_top
-
+    /* switch to supervisor mode */
     and r1, #0x13
     MSR cpsr_c, r1
-    LDR sp, =svc_stack_top
+    LDR sp, =svc_stack_top /* set sp_irq to svc_stack_top */
 
     MSR cpsr_c, r2
 

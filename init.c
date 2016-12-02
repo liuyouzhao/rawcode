@@ -1,4 +1,5 @@
 #include <unistd.h>
+#include <stdarg.h>
 
 struct __registers__
 {
@@ -9,17 +10,7 @@ struct __registers__
     int cpsr;
 };
 
-volatile struct __registers__* _p_registers_ = (struct __registers__*) 0x10000000; 
 volatile unsigned char* _p_uart0_start_ = (unsigned char*) 0x0101f1000;
-void uart0_printf(const char* text)
-{
-    char* tmp = (char*) text;
-    while((*tmp) != '\0')
-    {
-        *_p_uart0_start_ = *tmp;
-        tmp ++;
-    }
-}
 
 void uart0_printhex32(int hex)
 {
@@ -39,6 +30,71 @@ void uart0_printhex32(int hex)
         *_p_uart0_start_ = r;
     }
     *(_p_uart0_start_) = '\n';
+}
+
+void uart0_printnum10(int num)
+{
+    int i = num;
+    int d = 0;
+    char arr[12] = {0};
+    char* p = arr + 11;
+    
+    while(i > 0) {
+        arr[d] = (i % 10) + 48;
+        d ++;
+        i = i / 10;
+    }
+
+    while(*p == 0) {
+        p --;
+    }
+
+    for(i = 0; i < d; i ++) {
+        *_p_uart0_start_ = *p;
+        p --;
+    }
+}
+
+void uart0_printf(const char* text)
+{
+    char* tmp = (char*) text;
+    while((*tmp) != '\0')
+    {
+        *_p_uart0_start_ = *tmp;
+        tmp ++;
+    }
+}
+
+void uart0_printf_ext(const char* text, ...)
+{
+    char* tmp = (char*) text;
+    char close = 0;
+    int n = 0;
+    char c = 0;
+    char* pstr = 0;
+    double f = 0.0f;
+        
+    va_list ap;  
+    va_start(ap, text);  
+
+    while((*tmp) != '\0')
+    {
+        if(*tmp == '%' && *(tmp + 1) == 'd') {
+            n = va_arg(ap, int);
+            uart0_printnum10(n);
+        } else if(*tmp == '%' && *(tmp + 1) == 'c') {
+            c = va_arg(ap, int);
+            *_p_uart0_start_ = c;
+        } else if(*tmp == '%' && *(tmp + 1) == 's') {
+            pstr = va_arg(ap, char*);
+            uart0_printf(pstr);
+        } else if(*tmp == '%' && *(tmp + 1) == 'f') {
+            f = va_arg(ap, double);
+            /// Not Implement
+        }
+        tmp ++;
+    }
+    va_end(ap);
 }
 
 
@@ -83,10 +139,7 @@ void irq()
     tick_done();
     uart0_printf("666\n");
     uart0_printf("irq interrupt came!\n");
-#if 0
-    asm("mov lr, r9");
-    asm("subs pc, lr, #4");
-#endif
+    uart0_printf("switch to next thread...\n");
 }
 
 void fiq()
@@ -108,9 +161,6 @@ int steven()
         _insert_code(cmd, begin);
         uart0_printhex32(_query_code(begin));
     }
-
-    //_test();
-    //do_swi();
 
     uart0_printf("steven222\n");
     
