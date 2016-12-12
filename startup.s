@@ -127,8 +127,8 @@ _start:
  * ================= The Status register ============================
  * cpsr[current processor status register]
  * spsr[saved processor status register]
- * |31 30 29 28    7  6  5   4  3  2  1  0|
- * | N  Z  C  V....I  F  T  M4 M3 M2 M1 M0|
+ * |31 30 29 28 ... 24 ...  7  6  5   4  3  2  1  0|
+ * | N  Z  C  V     J       I  F  T  M4 M3 M2 M1 M0|
  * [N] save as calc-res bit[31],1(>=0),0(<0)
  * [Z] calc-res of CMP, 1(=0),0(!=0)
  * [C] sum&sub,carrybit or borrowbit
@@ -143,6 +143,17 @@ _start:
  * 0b10111 ABORT      PC,R14_ABT-R13_ABT,R12~R0,CPSR,SPSR_ABT
  * 0b11011 UNDEFINEED PC,R14_UND-R8_UND,R12~R0,CPSR,SPSR_UND
  * 0b11111 SYSTEM     PC,R14-R0,CPSR(ARM v4+)
+ *
+ * T&J: Instruction set flags
+ * |-----------------------------|
+ * | J | T | Instruction set     |
+ * |-----------------------------|
+ * | 0 | 0 | Arm (standard)      |
+ * | 0 | 1 | Thumb               |
+ * | 1 | 0 | Jazelle             |
+ * | 1 | 1 | Reserved            |
+ * |-----------------------------|
+ *
 */
 __reset:
     LDR sp, =stack_top /* sp is normal R13, set normal stack_top */
