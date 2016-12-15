@@ -16,22 +16,26 @@
 ##
 ####
 
-
+BUILD=build
 TARGET=arm
-PLATFORM=`ls ./bin`
+PLATFORM=./$BUILD/toolchain/$TARGET
 
-if [ "$PLATFORM"x = "$TARGET"x ];then
-echo [1]Got corresponding platform:[$PLATFORM]
-sleep 1
+if [ -d "$PLATFORM" ];then
+echo ""
+echo [1]Got corresponding platform:[$TARGET] in $PLATFORM
 else
 echo ""
 echo ""
 echo [1]No platform, unzip default one.
 echo Please wait...
-sleep 5
-tar jxvf bin.tar.bz2
+sleep 1
+tar jxvf ./$BUILD/$TARGET.tar.bz2
+mv toolchain/* $BUILD/toolchain/
 fi
 
+cp $BUILD/Makefile ./
+echo ""
+echo [2]Start make all...
 make all
 #./bin/w500/bin/arm-none-eabi-as -mcpu=arm926ej-s startup.s -o startup.o
 #./bin/w500/bin/arm-none-eabi-as -mcpu=arm926ej-s iv.s -o iv.o

@@ -1,0 +1,8 @@
+Run in qemu
+
+[1]./make.sh to build
+[2]core is kernel
+[3]boot is init 
+
+Run Command:
+qemu-system-arm -M versatilepb -nographic -kernel output.bin
