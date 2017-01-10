@@ -32,8 +32,8 @@ OUT_DIR=out/$(PLATFORM)
 include filelist.mk
 include config.mk
 
-AFLAGS=-mcpu=arm926ej-s
-CFLAGS=-mcpu=arm926ej-s  \
+AFLAGS=-mcpu=$(CPU)
+CFLAGS=-mcpu=$(CPU)  \
        -nostdlib -g \
        $(C_CFLAGS)
 

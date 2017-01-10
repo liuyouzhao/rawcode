@@ -1,39 +1,6 @@
-#include <config.h>
 #include <utils/util.h>
 
-void undefined_instruction()
-{ 
-    __DEBUG__
-}
-
 void software_interrupt(unsigned int inst, unsigned int sp)
-{
-    __DEBUG__
-}
-
-void prefetch_abort()
-{
-    __DEBUG__
-}
-
-void data_abort()
-{
-    __DEBUG__
-}
-
-void not_used()
-{
-    __DEBUG__
-}
-
-void irq()
-{
-    printf("VIC: [%x] \n", getreg32(CONF_VIC_BASE));
-    boot_tick_done();
-    __DEBUG__
-}
-
-void fiq()
 {
     __DEBUG__
 }

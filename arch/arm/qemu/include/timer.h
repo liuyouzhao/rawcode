@@ -1,3 +1,6 @@
+#ifndef __INCLUDE_TIMER_H
+#define __INCLUDE_TIMER_H
+
 #define TIMER_VALUE 0x1 /* 0x04 bytes */
 #define TIMER_CONTROL 0x2 /* 0x08 bytes */
 #define TIMER_INTCLR 0x3 /* 0x0C bytes */
@@ -7,3 +10,5 @@
 #define TIMER_INTEN 0x20
 #define TIMER_32BIT 0x02
 #define TIMER_ONESHOT 0x01
+
+#endif /* __INCLUDE_TIMER_H */

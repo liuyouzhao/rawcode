@@ -1,3 +1,6 @@
+#ifndef __INCLUDE_CONFIG_H
+#define __INCLUDE_CONFIG_H
+
 /* Memory map for qemu Versatile/PB:  */
 #define CONF_SYSTEM_REGISTERS                0x10000000
 #define CONF_PCI_CONTROLLER_CONFIG_REGISTERS 0x10001000
@@ -23,6 +26,7 @@
 #define CONF_UART1                           0x101f2000
 #define CONF_UART2                           0x101f3000
 
+#endif /* __INCLUDE_CONFIG_H */
 
 /* Memory map for Versatile/PB:  */
 /* 0x10000000 System registers.  */

@@ -14,10 +14,11 @@ int init()
         printf("%x\n", _query_code(begin));
     }
 
-    boot_timer_init();
+    arch_init();
+
+    rc_task_init();
 
     for(;;) {}
-    //tick_loop(uart0_printf);
 
     return 0;
 }
