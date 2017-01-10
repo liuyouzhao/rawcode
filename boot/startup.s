@@ -161,7 +161,7 @@ __reset:
      /* open IRQ */
     MRS r1, cpsr       /* read cpsr content into r1 */
     BIC r1, r1, #0x80  /* bit clean, clean x000 0000 */
-    mov r2, r1         /* backup to r2, why? */
+    mov r2, r1         /* backup to r2 */
     MSR cpsr_c, r1     /* only set control bits[0-7] */
     
     /* switch to IRQ mode */
@@ -181,7 +181,7 @@ __reset:
 
     MSR cpsr_c, r2
 
-    BL steven
+    BL init
     B .
 
     
@@ -203,8 +203,8 @@ do_swi:
 _insert_code:
     str r0, [r1]
     bx lr
-    
-    
+
+
 .globl _query_code
 _query_code:
     ldr r0, [r0]
@@ -239,9 +239,14 @@ __not_used:
 /*    ldr r0,[lr,#-4]*/
 /*    mov r1,sp */
 __irq:
-    push {lr}
+    push {r0, r1, r2, lr}
+    MRS r1, cpsr
+    MOV r2, r1
+    ORR r1, #0x80
+    MSR cpsr_c, r1
     bl irq
-    pop {lr}
+    MSR cpsr_c, r2
+    pop {r0, r1, r2, lr}
     subs pc,lr,#4
     
     

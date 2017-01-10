@@ -2,6 +2,13 @@
 #include <string.h>
 #include <stdlib.h>
 
+typedef struct
+{
+    unsigned int stack_heap_top;
+    unsigned int stack_heap_bottom;
+    
+} rc_heap_s;
+
 
 void *malloc(size_t size)
 {

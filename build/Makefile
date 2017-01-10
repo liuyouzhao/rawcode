@@ -29,15 +29,18 @@ LDIR2 =$(ROOT)/$(BUILD)/toolchain/$(PLATFORM)/lib/gcc/$(PLATFORM)-none-eabi/4.9.
 
 OUT_DIR=out/$(PLATFORM)
 
+include filelist.mk
+include config.mk
+
 AFLAGS=-mcpu=arm926ej-s
 CFLAGS=-mcpu=arm926ej-s  \
-       -nostdlib -g
+       -nostdlib -g \
+       $(C_CFLAGS)
 
 LDFLAGS = -L$(LDIR) \
           -L$(LDIR2) \
 	  -lc -lgcc -lm 
 
-include filelist.mk
 
 C_OBJS =
 S_OBJS =

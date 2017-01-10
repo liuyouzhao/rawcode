@@ -15,13 +15,17 @@
 ##
 
 ### C files
+C_UTIL_FILES = utils/util.c
+
 C_BOOT_FILES = boot/timer.c \
-               boot/init.c
+               boot/init.c \
+               boot/irq.c
 
 C_CORE_FILES =
 
 C_FILES += $(C_BOOT_FILES)
 C_FILES += $(C_CORE_FILES)
+C_FILES += $(C_UTIL_FILES)
 
 ### ASM files
 S_BOOT_FILES = boot/startup.s
