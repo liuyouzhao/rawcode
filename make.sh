@@ -33,9 +33,10 @@ tar jxvf ./$BUILD/$TARGET.tar.bz2
 mv toolchain/* $BUILD/toolchain/
 fi
 
-cp $BUILD/Makefile ./
+cp $BUILD/Makefile ./source
 echo ""
 echo [2]Start make all...
+cd source
 make all
 #./bin/w500/bin/arm-none-eabi-as -mcpu=arm926ej-s startup.s -o startup.o
 #./bin/w500/bin/arm-none-eabi-as -mcpu=arm926ej-s iv.s -o iv.o

@@ -40,7 +40,7 @@ SECTIONS
 {
 . = 0x10000;
 /* the startup.o in out/arm/boot */
-startup : { out/arm/boot/startup.o(.text)}
+startup : { ../out/arm/boot/startup.o(.text)}
 .data : {*(.data)}
 .bss : {*(.bss)}
 . = ALIGN(8);
