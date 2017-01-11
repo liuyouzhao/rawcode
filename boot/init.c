@@ -1,5 +1,5 @@
 #include <unistd.h>
-#include <config.h>
+#include <arch.h>
 #include <utils/util.h>
 
 int init()
@@ -18,7 +18,9 @@ int init()
 
     rc_task_init();
 
-    for(;;) {}
+    for(;;) {
+//        printf("*");
+    }
 
     return 0;
 }

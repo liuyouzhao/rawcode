@@ -1,4 +1,4 @@
-#include <utils/util.h>
+#include <arch.h>
 
 void software_interrupt(unsigned int inst, unsigned int sp)
 {

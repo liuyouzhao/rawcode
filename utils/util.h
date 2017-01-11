@@ -3,23 +3,22 @@
 
 /* Command */
 /* Mark as organized with asm functions */
-#define FUNC_ASMORG
+#define FUNC_ASMREF
 
 /* Mark as organized with core functions */
-#define FUNC_COREORG
+#define FUNC_COREREF
+
+/* Mark as reference by boot */
+#define FUNC_BOOTREF
 
 /* Addres opt */
 #define _PTR_(a)              (volatile unsigned int *)(a)
 #define _ARR_(a)              ((volatile unsigned int *)(a))
 #define _PTRFV_(a)            (void (*)())(a)
+#define _SELF_(t,m,n)         ((t*)((int)(&n) - (int)(&(((t*)0)->m))))
 
 /* Registers control */
 #define getreg32(a)          (*(volatile int *)(a))
 #define putreg32(v,a)        (*(volatile int *)(a) = (v))
-
-
-#define printf uart0_printf_ext
-
-#define __DEBUG__ printf("%s [%s:%d]\n", __FILE__, __FUNCTION__, __LINE__);
 
 #endif /* __INCLUDE_UTIL_H */

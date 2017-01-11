@@ -15,7 +15,7 @@
 ##
 
 ### C files
-C_UTIL_FILES = utils/util.c
+C_UTIL_FILES =
 
 C_BOOT_FILES = boot/init.c
 
@@ -28,7 +28,7 @@ C_ARCH_FILES = arch/$(PLATFORM)/$(BOARD)/irq.c \
 
 C_CORE_FILES = core/rc_mem.c \
                core/rc_task.c \
-               core/rc_list.c \
+               core/rc_queue.c \
                core/rc_timer.c
 
 C_FILES += $(C_BOOT_FILES)
