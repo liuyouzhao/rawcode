@@ -32,6 +32,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  ********************************************************************************/
+#ifndef __INCLUDE_LIST_H
+#define __INCLUDE_LIST_H
 
 typedef struct l_node_s
 {
@@ -190,3 +192,6 @@ static inline l_node_t * __l_next(l_node_t **from)
     __l_pop_tail(l);
 #define list_next(f) \
     __l_next(&&f);
+
+
+#endif /* __INCLUDE_LIST_H */

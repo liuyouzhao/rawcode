@@ -15,11 +15,11 @@
 ##
 
 ### C files
-C_UTIL_FILES =
+C_UTIL_FILES = utils/debug.c
 
-C_BOOT_FILES = boot/init.c
-
-C_ARCH_FILES = arch/$(PLATFORM)/$(BOARD)/irq.c \
+C_ARCH_FILES = \
+               arch/$(PLATFORM)/$(BOARD)/init.c \
+               arch/$(PLATFORM)/$(BOARD)/irq.c \
                arch/$(PLATFORM)/$(BOARD)/fiq.c \
                arch/$(PLATFORM)/$(BOARD)/timer.c \
                arch/$(PLATFORM)/$(BOARD)/arch.c \
@@ -37,7 +37,7 @@ C_FILES += $(C_UTIL_FILES)
 C_FILES += $(C_ARCH_FILES)
 
 ### ASM files
-S_BOOT_FILES = boot/startup.s
+S_BOOT_FILES = arch/$(PLATFORM)/$(BOARD)/startup.s
 
 S_CORE_FILES =
 
@@ -45,4 +45,4 @@ S_FILES += $(S_BOOT_FILES)
 S_FILES += $(S_CORE_FILES)
 
 ### linker file
-LD_LINKER = boot/linker.ld
+LD_LINKER = arch/$(PLATFORM)/$(BOARD)/linker.ld

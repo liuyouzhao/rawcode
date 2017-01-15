@@ -33,14 +33,18 @@
 /**
  * Kernel configs
 */
+/* task */
 #define KC_TASK_MAX_NUM                    32
 #define KC_TASK_TOP                        0x00800000
 #define KC_TASK_STACK_MINSIZE              0xff
 #define KC_TASK_MAX_NAME_LEN               64
 
-#define printf uart0_printf_ext
-#define __DEBUG__ printf("%s [%s:%d]\n", __FILE__, __FUNCTION__, __LINE__);
-
+/* memory */
+#define KC_MEM_HEAP_LOW                    0x1f000
+#define KC_MEM_HEAP_TOP                    0x2f000
+#define KC_MEM_SLAB_UNIT                   16
+#define KC_MEM_SLAB_NMAX                   2048
+#define KC_MEM_PRESERVE_CHUNK              3
 
 typedef struct arch_registers_s
 {

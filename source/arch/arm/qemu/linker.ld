@@ -27,34 +27,34 @@
 
 /**
  * |-------------------------------------------------|
- * [text+data+bss]0x10000---0x14000
- * [stack]        0x14000---0x18000
- * [svc_stack]    0x18000---0x22000 (supervisor calls)
- * [isr_stack]    0x22000---0x26000 (interrupt status register)
- * [task_stack]   0x26000---0x826000
- * [heap_low]     0x826000--0x836000 (heap begin)
- * [heap]         0x836000-- 
+ * [text+data+bss]0x10000---0x14000 [16KB]
+ * [stack]        0x14000---0x15000 [4KB]
+ * [svc_stack]    0x15000---0x16000 [4KB] (supervisor calls)
+ * [isr_stack]    0x16000---0x17000 [4KB] (interrupt status register)
+ * [task_stack]   0x17000---0x1f000 [32KB]
+ * [heap_low]     0x1f000---0x2f000 [64KB](heap begin)
+ * [heap]         0x2f000-- 
 */
 ENTRY(_start)
 SECTIONS
 {
 . = 0x10000;
 /* the startup.o in out/arm/boot */
-startup : { ../out/arm/boot/startup.o(.text)}
+startup : { ../out/arm/arch/arm/qemu/startup.o(.text)}
 .data : {*(.data)}
 .bss : {*(.bss)}
 . = ALIGN(8);
 . = . + 0x4000; /* 4kB of stack memory */
-stack_top = .;
-. = . + 0x4000; /* 4kB of interrupt stack memory */
-svc_stack_top = .;
-. = . + 0x4000; /* 4kB of interrupt stack memory */
-isr_stack_top = .;
-. = . + 0x4000; /* little buffer of 4kB */
-task_stack_top = .;
-. = . + 0x800000;
-heap_low = .;
-. = . + 0x10000;
-heap_top = .;
+stack_top = .;  /* 0x14000 */
+. = . + 0x1000; /* 4kB of interrupt stack memory */
+svc_stack_top = .; /* 0x15000 */
+. = . + 0x1000; /* 4kB of interrupt stack memory */
+isr_stack_top = .; /* 0x16000 */
+. = . + 0x1000; /* little buffer of 4kB */
+task_stack_top = .; /* 0x17000 */
+. = . + 0x8000; /* 32KB task stack */
+heap_low = .;   /* 0x1f000 */
+. = . + 0x10000;/* 64KB heap */
+heap_top = .;   /* 0x2f000 */
 }
 

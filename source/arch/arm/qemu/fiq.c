@@ -1,4 +1,5 @@
 #include <arch.h>
+#include <utils/util.h>
 
 void fiq()
 {

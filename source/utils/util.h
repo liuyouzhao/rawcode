@@ -21,4 +21,6 @@
 #define getreg32(a)          (*(volatile int *)(a))
 #define putreg32(v,a)        (*(volatile int *)(a) = (v))
 
+#include <utils/debug.h>
+
 #endif /* __INCLUDE_UTIL_H */
