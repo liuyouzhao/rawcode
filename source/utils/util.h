@@ -13,8 +13,9 @@
 
 /* Addres opt */
 #define _PTR_(a)              (volatile unsigned int *)(a)
-#define _ARR_(a)              ((volatile unsigned int *)(a))
 #define _PTRFV_(a)            (void (*)())(a)
+#define _PTRC_(a)             (volatile unsigned char *)(a)
+#define _ARR_(a)              ((volatile unsigned int *)(a))
 #define _SELF_(t,m,n)         ((t*)((int)(&n) - (int)(&(((t*)0)->m))))
 
 /* Registers control */
