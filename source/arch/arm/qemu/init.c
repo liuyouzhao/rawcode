@@ -14,17 +14,23 @@ int init()
         printf("%x\n", _query_code(begin));
     }
 
-    switch_irq();
 
-    int p = asm_get_c1();
-    printf("1----%x\n", p);
-    int r0 = asm_mpu_config();
-    p = asm_get_c1();
-    printf("2----%x\n", r0);
+    printf("okokok\n");
+    switch_svc();
+    printf("1\n");
+    switch_irq();
+    printf("2\n");
+    switch_user();
+    printf("3\n");
+    char *p = 0;
+    *p = 'c';
+    printf("4\n");
+
 
     arch_init();
-
     rc_task_init();
+
+    
 
     for(;;) {
 //        printf("*");

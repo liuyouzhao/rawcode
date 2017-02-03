@@ -25,17 +25,16 @@ asm_mpu_config:
 
 @; Enable mmu
     mcr     p15, 0, r0, c2, c0, 0
-    orr     r0, r0, #0b10
-    orr     r0, r0, #(0b10 << 10)
-    orr     r0, r0, #(0b10000)
-    orr     r0, r0, #(0b01 << 5)
+    orr     r0, r0, #0b11110
+    orr     r0, r0, #(0x80 << 20)
+    orr     r0, r0, #(0b01 << 10)
     mcr     p15, 0, r0, c2, c0, 0
 
     mov     r1, #0x3
     mcr     p15, 0, r1, c3, c0, 0
 
     mrc     p15, 0, r2, c1, c0, 0       @; read CP15 register 1
-    orr     r2, r2, #0x0                @; enable MPU bit
+    orr     r2, r2, #0x1                @; enable MMU bit
     mcr     p15, 0, r2, c1, c0, 0       @; write cp15 register 1
 
 @; Re-open IRQ

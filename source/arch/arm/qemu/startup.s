@@ -216,15 +216,7 @@ _query_code:
     
 
 __undefined_instruction:
-    push {r0, r1, r2, lr}
-    MRS r1, cpsr
-    MOV r2, r1
-    ORR r1, #0x80
-    MSR cpsr_c, r1
     bl undefined_instruction
-    MSR cpsr_c, r2
-    pop {r0, r1, r2, lr}
-    subs pc,lr,#4
     
 __software_interrupt:
     push {r0, r1, r2, lr}
@@ -238,37 +230,13 @@ __software_interrupt:
     subs pc,lr,#4
     
 __prefetch_abort:
-    push {r0, r1, r2, lr}
-    MRS r1, cpsr
-    MOV r2, r1
-    ORR r1, #0x80
-    MSR cpsr_c, r1
     bl prefetch_abort
-    MSR cpsr_c, r2
-    pop {r0, r1, r2, lr}
-    subs pc,lr,#4
     
 __data_abort:
-    push {r0, r1, r2, lr}
-    MRS r1, cpsr
-    MOV r2, r1
-    ORR r1, #0x80
-    MSR cpsr_c, r1
     bl data_abort
-    MSR cpsr_c, r2
-    pop {r0, r1, r2, lr}
-    subs pc,lr,#4
     
 __not_used:
-    push {r0, r1, r2, lr}
-    MRS r1, cpsr
-    MOV r2, r1
-    ORR r1, #0x80
-    MSR cpsr_c, r1
     bl not_used
-    MSR cpsr_c, r2
-    pop {r0, r1, r2, lr}
-    subs pc,lr,#4
     
 /*    ldr r0,[lr,#-4]*/
 /*    mov r1,sp */
@@ -291,36 +259,25 @@ __fiq:
 
 .global switch_user
 switch_user:
-    push    {r0-r6, lr}
-    mrs     r0, cpsr
-    orr     r0, r0, #0x1f
-    and     r0, #0x10
-    msr     cpsr_c, r0
-    pop     {r0-r6, pc}
+    LDR    R0, =stack_top    @; context switch and branch
+    MOV    R1, LR
+    MSR    CPSR_c, #0x10     @; store modified CPSR into SPSR
+    MOV    SP, R0
+    MOV    PC, R1
 
 .global switch_svc
 switch_svc:
-    push    {r0-r6, lr}
-    mrs     r0, cpsr
-    orr     r0, r0, #0x1f
-    and     r0, #0x13
-    MSR     cpsr_c, r0
-    pop     {r0-r6, pc}
-
-.global switch_sys
-switch_sys:
-    push    {r0-r6, lr}
-    mrs     r0, cpsr
-    orr     r0, r0, #0x1f
-    MSR     cpsr_c, r0
-    pop     {r0-r6, pc}
+    MRS    R0, CPSR          @; load CPSR into R0
+    BIC    R0, R0, #0x1F     @; clear mode field
+    ORR    R0, R0, #0x13     @; user mode code
+    MSR    SPSR, R0          @; store modified CPSR into SPSR
+    MOVS   PC, LR            @; context switch and branch
 
 .global switch_irq
 switch_irq:
-    push    {r0-r6, lr}
-    mrs     r0, cpsr
-    orr     r0, r0, #0x1f
-    and     r0, #0x12
-    MSR     cpsr_c, r0
-    pop     {r0-r6, pc}
+    MRS    R0, CPSR          @; load CPSR into R0
+    BIC    R0, R0, #0x1F     @; clear mode field
+    ORR    R0, R0, #0x12     @; user mode code
+    MSR    SPSR, R0          @; store modified CPSR into SPSR
+    MOVS   PC, LR            @; context switch and branch
 
