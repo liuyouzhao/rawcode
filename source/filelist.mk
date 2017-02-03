@@ -39,7 +39,7 @@ C_FILES += $(C_ARCH_FILES)
 ### ASM files
 S_BOOT_FILES = arch/$(PLATFORM)/$(BOARD)/startup.s
 
-S_CORE_FILES =
+S_CORE_FILES = arch/$(PLATFORM)/$(BOARD)/mpu.s
 
 S_FILES += $(S_BOOT_FILES)
 S_FILES += $(S_CORE_FILES)

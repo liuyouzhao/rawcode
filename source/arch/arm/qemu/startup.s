@@ -136,7 +136,7 @@ _start:
  *
  * *** M[0-4] ***
  * M0-M4   mode       accessable
- * ob10000 user       pc,r14~r0,CPSR
+ * 0b10000 user       pc,r14~r0,CPSR
  * 0b10001 FIQ        PC,R14_FIQ-R8_FIQ,R7~R0,CPSR,SPSR_FIQ
  * 0b10010 IRQ        PC,R14_IRQ-R13_IRQ,R12~R0,CPSR,SPSR_IRQ
  * 0B10011 SUPERVISOR PC,R14_SVC-R13_SVC,R12~R0,CPSR,SPSR_SVC
@@ -165,7 +165,9 @@ __reset:
     MSR cpsr_c, r1     /* only set control bits[0-7] */
     
     /* switch to IRQ mode */
-    and r1, #0x12
+    mrs     r1, cpsr
+    orr     r1, r1, #0x1f
+    and     r1, #0x12
     MSR cpsr_c, r1     /* switch to IRQ mode, sp is sp_irq */
     LDR sp, =isr_stack_top /* set sp_irq to isr_stack_top */
 
@@ -175,8 +177,10 @@ __reset:
     MSR cpsr_c, r1
 
     /* switch to supervisor mode */
-    and r1, #0x13
-    MSR cpsr_c, r1
+    mrs     r1, cpsr
+    orr     r1, r1, #0x1f
+    and     r1, #0x13
+    MSR     cpsr_c, r1
     LDR sp, =svc_stack_top /* set sp_irq to svc_stack_top */
 
     MSR cpsr_c, r2
@@ -212,29 +216,59 @@ _query_code:
     
 
 __undefined_instruction:
-    ldr	pc, undefined_instruction_handle
-    bx lr
-    undefined_instruction_handle:.word undefined_instruction
+    push {r0, r1, r2, lr}
+    MRS r1, cpsr
+    MOV r2, r1
+    ORR r1, #0x80
+    MSR cpsr_c, r1
+    bl undefined_instruction
+    MSR cpsr_c, r2
+    pop {r0, r1, r2, lr}
+    subs pc,lr,#4
     
 __software_interrupt:
-    ldr	pc, software_interrupt_handle
-    bx lr
-    software_interrupt_handle:.word software_interrupt
+    push {r0, r1, r2, lr}
+    MRS r1, cpsr
+    MOV r2, r1
+    ORR r1, #0x80
+    MSR cpsr_c, r1
+    bl software_interrupt
+    MSR cpsr_c, r2
+    pop {r0, r1, r2, lr}
+    subs pc,lr,#4
     
 __prefetch_abort:
-    ldr	pc, prefetch_abort_handle
-    bx lr
-    prefetch_abort_handle:.word prefetch_abort
+    push {r0, r1, r2, lr}
+    MRS r1, cpsr
+    MOV r2, r1
+    ORR r1, #0x80
+    MSR cpsr_c, r1
+    bl prefetch_abort
+    MSR cpsr_c, r2
+    pop {r0, r1, r2, lr}
+    subs pc,lr,#4
     
 __data_abort:
-    ldr	pc, data_abort_handle
-    bx lr
-    data_abort_handle:.word data_abort
+    push {r0, r1, r2, lr}
+    MRS r1, cpsr
+    MOV r2, r1
+    ORR r1, #0x80
+    MSR cpsr_c, r1
+    bl data_abort
+    MSR cpsr_c, r2
+    pop {r0, r1, r2, lr}
+    subs pc,lr,#4
     
 __not_used:
-    ldr	pc, not_used_handle
-    bx lr
-    not_used_handle:.word not_used
+    push {r0, r1, r2, lr}
+    MRS r1, cpsr
+    MOV r2, r1
+    ORR r1, #0x80
+    MSR cpsr_c, r1
+    bl not_used
+    MSR cpsr_c, r2
+    pop {r0, r1, r2, lr}
+    subs pc,lr,#4
     
 /*    ldr r0,[lr,#-4]*/
 /*    mov r1,sp */
@@ -249,21 +283,44 @@ __irq:
     pop {r0, r1, r2, lr}
     subs pc,lr,#4
     
-    
- /*   subs pc, lr, #4
-    mov r9, lr
-    bl irq*/
-/*    ldr	pc, irq_handle */
-/*    irq_handle:.word irq */
-    
-/*__irq_revert:
-    mov r14, r13
-    subs pc, r14, #4
-*/
-
-
 __fiq:
     ldr	pc, fiq_handle
     bx lr
     fiq_handle:.word fiq
+
+
+.global switch_user
+switch_user:
+    push    {r0-r6, lr}
+    mrs     r0, cpsr
+    orr     r0, r0, #0x1f
+    and     r0, #0x10
+    msr     cpsr_c, r0
+    pop     {r0-r6, pc}
+
+.global switch_svc
+switch_svc:
+    push    {r0-r6, lr}
+    mrs     r0, cpsr
+    orr     r0, r0, #0x1f
+    and     r0, #0x13
+    MSR     cpsr_c, r0
+    pop     {r0-r6, pc}
+
+.global switch_sys
+switch_sys:
+    push    {r0-r6, lr}
+    mrs     r0, cpsr
+    orr     r0, r0, #0x1f
+    MSR     cpsr_c, r0
+    pop     {r0-r6, pc}
+
+.global switch_irq
+switch_irq:
+    push    {r0-r6, lr}
+    mrs     r0, cpsr
+    orr     r0, r0, #0x1f
+    and     r0, #0x12
+    MSR     cpsr_c, r0
+    pop     {r0-r6, pc}
 

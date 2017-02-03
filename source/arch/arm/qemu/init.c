@@ -14,6 +14,14 @@ int init()
         printf("%x\n", _query_code(begin));
     }
 
+    switch_irq();
+
+    int p = asm_get_c1();
+    printf("1----%x\n", p);
+    int r0 = asm_mpu_config();
+    p = asm_get_c1();
+    printf("2----%x\n", r0);
+
     arch_init();
 
     rc_task_init();
