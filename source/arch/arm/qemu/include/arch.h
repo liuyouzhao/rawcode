@@ -42,8 +42,8 @@
 /* memory */
 #define KC_MEM_HEAP_LOW                    0x1f000
 #define KC_MEM_HEAP_TOP                    0x2f000
-#define KC_MEM_SLAB_UNIT                   16
-#define KC_MEM_SLAB_NMAX                   2048
+#define KC_MEM_SLAB_UNIT                   64
+#define KC_MEM_SLAB_NMAX                   512
 #define KC_MEM_PRESERVE_CHUNK              3
 
 typedef struct arch_registers_s

@@ -5,13 +5,25 @@
 #include <port/port.h>
 
 /*
-|---------|
-| 0 [16B] |->slab0->slab1->slab2
+
+cache:       slab_link&chunk_link:
+|---------|  
+| 0  slab0|->slab1->slab2
 | 1       |    |
 | 2       |    chunk0->chunk1->chunk2
-| 3       |      ^
-| ....... |
-| n[n*16B]|
+| 3       |       ^
+| ....... |  
+| n       |  
+-----------
+
+global heap top
+[top]                                         [low]
+--------------------------------------------------
+|management data|                    | user data |
+--------------------------------------------------
+^                                                ^
+L                                                R
+
 */
 typedef struct rc_mm_heap_s
 {
@@ -29,7 +41,7 @@ typedef struct rc_mm_chunk_s
 
 typedef struct rc_mm_slab_s
 {
-    rc_mm_chunk_t *chunks;
+    rc_mm_chunk_t *chunk_head;
 
     unsigned int alloced;
 
@@ -55,16 +67,11 @@ static rc_mm_cache_t s_cache;
 void rc_memset(void* p, unsigned char v, unsigned int len);
 void rc_memcpy(void* dst, void *src, unsigned int len);
 
-static void _init_chunks(unsigned int chunk_size);
-/**
-global heap top
-[top]                                         [low]
---------------------------------------------------
-|management data|                    | user data |
---------------------------------------------------
-^                                                ^
-L                                                R
-*/
+static rc_mm_chunk_t* init_chunks(unsigned int chunk_size);
+static void init_slabs();
+static void init_cache();
+unsigned int rc_heap_left();
+
 int rc_mm_init()
 {
     int i;
@@ -79,6 +86,10 @@ int rc_mm_init()
 
     /* clear heap mem */
     rc_memset(s_heap.ptr_stack_heap_left, 0, s_heap.size);
+
+    init_cache();
+    i = rc_heap_left();
+    printf("heap left %d Bytes\n", i);
 }
 
 void rc_memset(void* p, unsigned char v, unsigned int len)
@@ -104,7 +115,12 @@ void rc_free()
 {
 }
 
-static int _heap_fatal(unsigned int size)
+unsigned int rc_heap_left()
+{
+    return s_heap.ptr_stack_heap_right - s_heap.ptr_stack_heap_left;
+}
+
+static int heap_fatal(unsigned int size)
 {
     if((unsigned int)(s_heap.ptr_stack_heap_left + size) >=
         (unsigned int)(s_heap.ptr_stack_heap_right)) {
@@ -113,64 +129,102 @@ static int _heap_fatal(unsigned int size)
     return 0;
 }
 
-static void _mov_left_heap_ptr(unsigned int size)
+static void mov_left_heap_ptr(unsigned int size)
 {
-    if(_heap_fatal(size)) {
+    if(heap_fatal(size)) {
         __DEBUG_ERR__("[PMD] Memory deficiency");
         g_pt->panic();
     }
     s_heap.ptr_stack_heap_left += size;
 }
 
-static void _mov_right_heap_ptr(unsigned int size)
+static void mov_right_heap_ptr(unsigned int size)
 {
-    if(_heap_fatal(size)) {
+    if(heap_fatal(size)) {
         __DEBUG_ERR__("[PMD] Memory deficiency");
         g_pt->panic();
     }
     s_heap.ptr_stack_heap_right -= size;
 }
 
-static void* _left_valid_next(unsigned int size)
+static void* frm_left_valid_next(unsigned int size)
 {
     void *p = s_heap.ptr_stack_heap_left;
-    _mov_left_heap_ptr(size);
+    mov_left_heap_ptr(size);
     return p;
 }
 
-static void* _right_valid_next(unsigned int size)
+static void* frm_right_valid_next(unsigned int size)
 {
     void *p = s_heap.ptr_stack_heap_right - size;
-    _mov_right_heap_ptr(size);
+    mov_right_heap_ptr(size);
     return p;
 }
 
-static void _init_slabs()
+/**
+ * init cache for all kinds of slabs
+
+cache:        slab_link&chunk_link:
+|---------|  |
+| 0  slab0|  | ->slab1->slab2
+| 1       |  |     |
+| 2       |  |     chunk0->chunk1->chunk2
+| 3       |  |       ^
+| ....... |  |
+| n       |  |
+
+*/
+static void init_cache()
+{
+    s_cache.arr_slabs = (rc_mm_slab_t*)frm_left_valid_next(sizeof(rc_mm_slab_t) * s_slab_nmax);
+    __DEBUG__    
+    init_slabs();
+    __DEBUG__
+}
+
+static void init_slabs()
 {
     int i;
-    rc_mm_slab_t slab;
+    rc_mm_slab_t *p;
 
     /* Init cache structure, slabs array */
     for( i = 0; i < s_slab_nmax; i ++ ) {
-        _init_chunks(i * s_slab_unit);
-        //(s_cache.arr_slabs + i * sizeof(rc_mm_slab_t)) = 
+        p = &(s_cache.arr_slabs[i]);
+        p->prev = p->next = 0;
+        p->alloced = 0;
+        p->chunk_head = init_chunks(i * s_slab_unit);
+        __DEBUG__
     }
 }
 
-static void _init_chunks(unsigned int chunk_size)
+/**
+Init all slab0s from cache table
+
+slab0->NULL
+  |
+  chunk0->chunk1->chunk2
+     ^
+*/
+static rc_mm_chunk_t* init_chunks(unsigned int chunk_size)
 {
     int i;
     rc_mm_chunk_t *prv = NULL;
+    rc_mm_chunk_t *head = NULL;
     rc_mm_chunk_t *cur = NULL;
-    rc_mm_chunk_t chunk;
 
-    for( i = 0; i < s_prsv_chunk; i ++ ) {
-        cur = _left_valid_next(sizeof(rc_mm_chunk_t));
-        ((rc_mm_chunk_t*)cur)->data = _right_valid_next(chunk_size);
+    prv = cur = head = frm_left_valid_next(sizeof(rc_mm_chunk_t));
+    ((rc_mm_chunk_t*)cur)->data = NULL;
+
+    for( i = 0; i < s_prsv_chunk - 1; i ++ ) {
+        cur->next = frm_left_valid_next(sizeof(rc_mm_chunk_t));
+        cur = cur->next;
+        ((rc_mm_chunk_t*)cur)->data = NULL;
 
         if(prv != NULL) {
             prv->next = cur;
         }
         prv = cur;
     }
+
+    return head;
 }

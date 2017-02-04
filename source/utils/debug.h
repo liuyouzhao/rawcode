@@ -52,5 +52,5 @@ void dbg_dump_stack();
 #define __DEBUG__ printf("%s [%s:%d]\n", __FILE__, __FUNCTION__, __LINE__);
 
 
-#define __DEBUG_ERR__(a) printf("[Fatal error] "a);
+#define __DEBUG_ERR__(a) printf("[Fatal error] "a"\n");
 #endif

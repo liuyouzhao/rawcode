@@ -34,8 +34,8 @@ static port_t s_arch_port =
 
     .heap_low = (unsigned char*) KC_MEM_HEAP_LOW,
     .heap_top = (unsigned char*) KC_MEM_HEAP_TOP,
-    .slab_unit = KC_MEM_SLAB_NMAX,
-    .slab_nmax = KC_MEM_SLAB_UNIT,
+    .slab_unit = KC_MEM_SLAB_UNIT,
+    .slab_nmax = KC_MEM_SLAB_NMAX,
     .prsv_chunk = KC_MEM_PRESERVE_CHUNK
 };
 

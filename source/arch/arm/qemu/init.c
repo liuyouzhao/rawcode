@@ -15,22 +15,19 @@ int init()
     }
 
 
-    printf("okokok\n");
+
     switch_svc();
-    printf("1\n");
-    switch_irq();
-    printf("2\n");
-    switch_user();
-    printf("3\n");
-    char *p = 0;
-    *p = 'c';
-    printf("4\n");
+    //asm_mpu_config();
 
 
     arch_init();
     rc_task_init();
+    rc_mm_init();
 
-    
+    switch_user();
+
+    char *p = NULL;
+    *p = 'c';
 
     for(;;) {
 //        printf("*");

@@ -24,11 +24,14 @@ asm_mpu_config:
     MSR cpsr_c, r1
 
 @; Enable mmu
+    ldr     r0, tlb_l1_base
     mcr     p15, 0, r0, c2, c0, 0
-    orr     r0, r0, #0b11110
-    orr     r0, r0, #(0x80 << 20)
-    orr     r0, r0, #(0b01 << 10)
-    mcr     p15, 0, r0, c2, c0, 0
+tlb_l1_base: .word 0x10100c02
+    ldr     r0, entry4020
+    ldr     r1, val4020
+    str     r1, [r0]
+entry4020:  .word 0x10101008
+val4020:    .word 0x10100c02
 
     mov     r1, #0x3
     mcr     p15, 0, r1, c3, c0, 0
