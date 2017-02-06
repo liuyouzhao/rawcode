@@ -36,6 +36,10 @@ void dbg_printnum10(int num)
         p --;
     }
 
+    if(d == 0) {
+        *glb_output_uart_addr = '0';
+        return;
+    }
     for(i = 0; i < d; i ++) {
         *glb_output_uart_addr = *p;
         p --;
@@ -66,7 +70,7 @@ void dbg_printf_ext(const char* text, ...)
 
     while((*tmp) != '\0')
     {
-        if(*tmp == '%' && *(tmp + 1) == 'x') {
+        if(*tmp == '%' && (*(tmp + 1) == 'x' || *(tmp + 1) == 'p')) {
             n = va_arg(ap, int);
             dbg_printhex32(n);
             tmp ++;

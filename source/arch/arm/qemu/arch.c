@@ -6,7 +6,7 @@
 * Global address pointers definition
 *************************************/
 unsigned char* glb_output_uart_addr = (unsigned char*) IC_UART0;
-
+static port_t s_arch_port;
 
 /********************************
  * Register base functions
@@ -29,10 +29,25 @@ static void _arch_port_panic()
 
 static void _arch_enter_critical()
 {
+    asm_close_irq();
+    s_arch_port.critical_nesting ++;
+    printf(" %d ", s_arch_port.critical_nesting);
+    __DEBUG__    
 }
 
 static void _arch_exit_critical()
 {
+    s_arch_port.critical_nesting --;
+    if(s_arch_port.critical_nesting < 0) {
+        s_arch_port.critical_nesting = 0;
+    }
+
+    printf(" %d ", s_arch_port.critical_nesting);
+    __DEBUG__
+
+    if(s_arch_port.critical_nesting == 0) {
+        asm_open_irq();
+    }
 }
 
 static port_t s_arch_port =

@@ -281,3 +281,20 @@ switch_irq:
     MSR    SPSR, R0          @; store modified CPSR into SPSR
     MOVS   PC, LR            @; context switch and branch
 
+.global asm_open_irq
+asm_open_irq:
+    push {r1, lr}
+    MRS r1, cpsr       /* read cpsr content into r1 */
+    BIC r1, r1, #0x80  /* bit clean, clean x000 0000 */
+    mov r2, r1         /* backup to r2 */
+    MSR cpsr_c, r1     /* only set control bits[0-7] */
+    pop {r1, pc}
+
+.global asm_close_irq
+asm_close_irq:
+    push {r1, lr}
+    MRS r1, cpsr       /* read cpsr content into r1 */
+    ORR r1, r1, #0x80  /* bit clean, clean x000 0000 */
+    mov r2, r1         /* backup to r2 */
+    MSR cpsr_c, r1     /* only set control bits[0-7] */
+    pop {r1, pc}

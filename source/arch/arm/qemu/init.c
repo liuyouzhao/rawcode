@@ -29,14 +29,7 @@ int init()
     rc_task_init();
     rc_mm_init();
 
-    switch_user();
-
-    char *p = NULL;
-    *p = 'c';
-
-    for(;;) {
-//        printf("*");
-    }
+    for(;;) {}
 
     return 0;
 }

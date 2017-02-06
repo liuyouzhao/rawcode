@@ -34,7 +34,8 @@ typedef struct rc_mm_heap_s
 
 typedef struct rc_mm_chunk_s
 {
-    unsigned char occupied;
+    unsigned int id;
+    int occupied;
     struct rc_mm_chunk_s *next;
     unsigned char *data;
 
@@ -42,10 +43,9 @@ typedef struct rc_mm_chunk_s
 
 typedef struct rc_mm_slab_s
 {
+    unsigned int id;
     rc_mm_chunk_t *chunk_head;
-
     unsigned int alloced;
-
     struct rc_mm_slab_s *prev;
     struct rc_mm_slab_s *next;
 
@@ -87,16 +87,45 @@ static void init_cache();
 static void init_cache_slabs();
 static rc_mm_slab_t * create_slab(int i);
 static rc_mm_chunk_t* init_chunks(unsigned int chunk_size);
+static void * frm_right_valid_next(unsigned int size);
+static void * frm_left_valid_next(unsigned int size);
+static void dump_cache();
+void *rc_malloc(size_t size);
 
 /**
  * check how much memory left
 */
 unsigned int rc_heap_left();
 
+#if 0
+static void malloc_test()
+{
+    int ml = 0;
+    void *p = NULL;    
+
+    ml = rc_heap_left();
+    printf("heap left %d Bytes\n", ml);
+
+    p = rc_malloc(1024);
+    printf("%p \n", p);
+    p = rc_malloc(512);
+    printf("%p \n", p);
+    p = rc_malloc(256);
+    printf("%p \n", p);
+    p = rc_malloc(128);
+    printf("%p \n", p);
+    p = rc_malloc(2048);
+    printf("%p \n", p);
+
+    dump_cache();
+}
+#endif
+
 int rc_mm_init()
 {
     int i, j;
 
+    g_pt->enter_critical();
     s_heap.ptr_stack_heap_left = g_pt->heap_low;
     s_heap.ptr_stack_heap_right = g_pt->heap_top;
     s_heap.size = s_heap.ptr_stack_heap_right - s_heap.ptr_stack_heap_left;
@@ -120,8 +149,7 @@ int rc_mm_init()
     rc_memset(s_heap.ptr_stack_heap_left, 0, s_heap.size);
 
     init_cache();
-    i = rc_heap_left();
-    printf("heap left %d Bytes\n", i);
+    g_pt->exit_critical();
 }
 
 void rc_memset(void* p, unsigned char v, unsigned int len)
@@ -154,11 +182,18 @@ void *rc_malloc(size_t size)
         if(p_slab->alloced < s_prsv_chunk) {
             p_chunk = p_slab->chunk_head;
             while(p_chunk->occupied) p_chunk = p_chunk->next;
+
+            p_chunk->data = frm_right_valid_next(size);
+
+            g_pt->exit_critical();
+
             return p_chunk->data;
         }
 
         if(p_slab->next == NULL) {
             p_slab->next = create_slab(index);
+            p_slab->next->prev = p_slab;
+            p_slab->next->id = p_slab->id + 1;
         }
         p_slab = p_slab->next;
     }
@@ -197,32 +232,32 @@ static int heap_fatal(unsigned int size)
 
 static void mov_left_heap_ptr(unsigned int size)
 {
-    if(heap_fatal(size)) {
-        __DEBUG_ERR__("[PMD] Memory deficiency");
-        g_pt->panic();
-    }
     s_heap.ptr_stack_heap_left += size;
 }
 
 static void mov_right_heap_ptr(unsigned int size)
 {
-    if(heap_fatal(size)) {
-        __DEBUG_ERR__("[PMD] Memory deficiency");
-        g_pt->panic();
-    }
     s_heap.ptr_stack_heap_right -= size;
 }
 
-static void* frm_left_valid_next(unsigned int size)
+static void * frm_left_valid_next(unsigned int size)
 {
-    void *p = s_heap.ptr_stack_heap_left;
+    void *p;
+    if(heap_fatal(size)) {
+        return NULL;
+    }
+    p = s_heap.ptr_stack_heap_left;
     mov_left_heap_ptr(size);
     return p;
 }
 
-static void* frm_right_valid_next(unsigned int size)
+static void * frm_right_valid_next(unsigned int size)
 {
-    void *p = s_heap.ptr_stack_heap_right - size;
+    void *p;
+    if(heap_fatal(size)) {
+        return NULL;
+    }
+    p = s_heap.ptr_stack_heap_right - size;
     mov_right_heap_ptr(size);
     return p;
 }
@@ -244,9 +279,7 @@ size is n * s_slab_unit
 static void init_cache()
 {
     s_cache.arr_slabs = (rc_mm_slab_t*)frm_left_valid_next(sizeof(rc_mm_slab_t) * s_slab_nmax);
-    __DEBUG__
     init_cache_slabs();
-    __DEBUG__
 }
 
 static void init_cache_slabs()
@@ -259,8 +292,8 @@ static void init_cache_slabs()
         p = &(s_cache.arr_slabs[i]);
         p->prev = p->next = 0;
         p->alloced = 0;
+        p->id = i;
         p->chunk_head = init_chunks(i * s_slab_unit);
-        __DEBUG__
     }
 }
 
@@ -289,6 +322,7 @@ static rc_mm_chunk_t* init_chunks(unsigned int chunk_size)
     rc_mm_chunk_t *cur = NULL;
 
     prv = cur = head = frm_left_valid_next(sizeof(rc_mm_chunk_t));
+    ((rc_mm_chunk_t*)cur)->id = 0;
     ((rc_mm_chunk_t*)cur)->data = NULL;
     ((rc_mm_chunk_t*)cur)->occupied = 0;
 
@@ -296,7 +330,7 @@ static rc_mm_chunk_t* init_chunks(unsigned int chunk_size)
 
         cur->next = frm_left_valid_next(sizeof(rc_mm_chunk_t));
         cur = cur->next;
-
+        ((rc_mm_chunk_t*)cur)->id = i + 1;
         ((rc_mm_chunk_t*)cur)->data = NULL;
         ((rc_mm_chunk_t*)cur)->occupied = 0;
 
@@ -307,4 +341,40 @@ static rc_mm_chunk_t* init_chunks(unsigned int chunk_size)
     }
 
     return head;
+}
+
+static void dump_cache()
+{
+    int i, j;
+    rc_mm_slab_t *ps;
+    rc_mm_chunk_t *pc;
+
+    g_pt->enter_critical();
+
+    printf("-----CACHE-----\n");
+    for( i = 0; i < s_slab_nmax; i ++ ) {
+
+        //for(j = 0; j < 99999999; j ++);
+
+        printf("[%d BYTES SLABS]", i * s_slab_unit);
+
+        ps = &(s_cache.arr_slabs[i]);
+        if(ps == NULL) {
+            __DEBUG_ERR__("Error, here slab is NULL");
+        }
+
+        printf("\n    ");
+        while(ps) {
+            printf("slab-%d ", ps->id);
+
+            pc = ps->chunk_head;
+            while(pc) {
+                printf("([%d] %d %x) ", pc->id, pc->occupied, pc->data);
+                pc = pc->next;
+            }
+            printf("\n");
+            ps = ps->next;
+        }
+    }
+    //g_pt->exit_critical();
 }
