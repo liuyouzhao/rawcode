@@ -27,3 +27,8 @@ int rc_task_init()
 {
     arch_bind_systick(rc_task_sys_tick);
 }
+
+int rc_task_alloc()
+{
+    return 0;
+}

@@ -17,6 +17,11 @@ int init()
 
 
     switch_svc();
+
+    /**
+     * Problems:
+     * here cannot open either MPU nor MMU
+     */
     //asm_mpu_config();
 
 

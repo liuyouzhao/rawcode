@@ -37,8 +37,14 @@
 
 typedef struct port_s
 {
+    /* Basic global functions */
     void (*reset)();
     void (*panic)();
+
+    /* Enter&exit critical functions */
+    void (*enter_critical)();
+    void (*exit_critical)();
+    unsigned long   critical_nesting;
 
     unsigned char*  uart0_addr;
     unsigned char*  uart1_addr;
