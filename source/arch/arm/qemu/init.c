@@ -29,6 +29,9 @@ int init()
     rc_task_init();
     rc_mm_init();
 
+    /* test go */
+    test_mem();
+
     for(;;) {}
 
     return 0;

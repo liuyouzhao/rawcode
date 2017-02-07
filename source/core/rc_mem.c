@@ -97,30 +97,6 @@ void *rc_malloc(size_t size);
 */
 unsigned int rc_heap_left();
 
-#if 0
-static void malloc_test()
-{
-    int ml = 0;
-    void *p = NULL;    
-
-    ml = rc_heap_left();
-    printf("heap left %d Bytes\n", ml);
-
-    p = rc_malloc(1024);
-    printf("%p \n", p);
-    p = rc_malloc(512);
-    printf("%p \n", p);
-    p = rc_malloc(256);
-    printf("%p \n", p);
-    p = rc_malloc(128);
-    printf("%p \n", p);
-    p = rc_malloc(2048);
-    printf("%p \n", p);
-
-    dump_cache();
-}
-#endif
-
 int rc_mm_init()
 {
     int i, j;
@@ -149,6 +125,7 @@ int rc_mm_init()
     rc_memset(s_heap.ptr_stack_heap_left, 0, s_heap.size);
 
     init_cache();
+
     g_pt->exit_critical();
 }
 
@@ -171,10 +148,15 @@ void *rc_malloc(size_t size)
     int i;
     rc_mm_slab_t *p_slab;
     rc_mm_chunk_t *p_chunk;
-    int index = size >> s_slab_para;
+    int index = size >> s_slab_para; /* size / s_slab_unit */
+
+    while(index * s_slab_unit < size) {
+        index ++;
+    }
 
     g_pt->enter_critical();
-    
+
+
     p_slab = &(s_cache.arr_slabs[index]);
 
     while(p_slab) {
@@ -184,7 +166,8 @@ void *rc_malloc(size_t size)
             while(p_chunk->occupied) p_chunk = p_chunk->next;
 
             p_chunk->data = frm_right_valid_next(size);
-
+            p_chunk->occupied = 1;
+            p_slab->alloced ++;
             g_pt->exit_critical();
 
             return p_chunk->data;
@@ -216,6 +199,42 @@ void rc_free()
 {
 }
 
+void rc_dump_cache()
+{
+    int i, j;
+    rc_mm_slab_t *ps;
+    rc_mm_chunk_t *pc;
+
+    g_pt->enter_critical();
+
+    printf("-----CACHE-----\n");
+    for( i = 0; i < s_slab_nmax; i ++ ) {
+
+        //for(j = 0; j < 99999999; j ++);
+
+        printf("[%d BYTES SLABS]", i * s_slab_unit);
+
+        ps = &(s_cache.arr_slabs[i]);
+        if(ps == NULL) {
+            __DEBUG_ERR__("Error, here slab is NULL");
+        }
+
+        printf("\n");
+        while(ps) {
+            printf("-----slab-%d ", ps->id);
+
+            pc = ps->chunk_head;
+            while(pc) {
+                printf("([%d] %d %x) ", pc->id, pc->occupied, pc->data);
+                pc = pc->next;
+            }
+            printf("\n");
+            ps = ps->next;
+        }
+    }
+    g_pt->exit_critical();
+}
+
 unsigned int rc_heap_left()
 {
     return s_heap.ptr_stack_heap_right - s_heap.ptr_stack_heap_left;
@@ -244,6 +263,7 @@ static void * frm_left_valid_next(unsigned int size)
 {
     void *p;
     if(heap_fatal(size)) {
+        __DEBUG_ERR__("fatal mem size");
         return NULL;
     }
     p = s_heap.ptr_stack_heap_left;
@@ -255,6 +275,7 @@ static void * frm_right_valid_next(unsigned int size)
 {
     void *p;
     if(heap_fatal(size)) {
+        __DEBUG_ERR__("fatal mem size");
         return NULL;
     }
     p = s_heap.ptr_stack_heap_right - size;
@@ -341,40 +362,4 @@ static rc_mm_chunk_t* init_chunks(unsigned int chunk_size)
     }
 
     return head;
-}
-
-static void dump_cache()
-{
-    int i, j;
-    rc_mm_slab_t *ps;
-    rc_mm_chunk_t *pc;
-
-    g_pt->enter_critical();
-
-    printf("-----CACHE-----\n");
-    for( i = 0; i < s_slab_nmax; i ++ ) {
-
-        //for(j = 0; j < 99999999; j ++);
-
-        printf("[%d BYTES SLABS]", i * s_slab_unit);
-
-        ps = &(s_cache.arr_slabs[i]);
-        if(ps == NULL) {
-            __DEBUG_ERR__("Error, here slab is NULL");
-        }
-
-        printf("\n    ");
-        while(ps) {
-            printf("slab-%d ", ps->id);
-
-            pc = ps->chunk_head;
-            while(pc) {
-                printf("([%d] %d %x) ", pc->id, pc->occupied, pc->data);
-                pc = pc->next;
-            }
-            printf("\n");
-            ps = ps->next;
-        }
-    }
-    //g_pt->exit_critical();
 }

@@ -31,10 +31,13 @@ C_CORE_FILES = core/rc_mem.c \
                core/rc_queue.c \
                core/rc_timer.c
 
+C_TEST_FILES = test/test_mem.c
+
 C_FILES += $(C_BOOT_FILES)
 C_FILES += $(C_CORE_FILES)
 C_FILES += $(C_UTIL_FILES)
 C_FILES += $(C_ARCH_FILES)
+C_FILES += $(C_TEST_FILES)
 
 ### ASM files
 S_BOOT_FILES = arch/$(PLATFORM)/$(BOARD)/startup.s
