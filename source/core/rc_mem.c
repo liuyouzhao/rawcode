@@ -37,6 +37,7 @@ typedef struct rc_mm_chunk_s
     unsigned int id;
     int occupied;
     struct rc_mm_chunk_s *next;
+    struct rc_mm_chunk_s *prev;
     unsigned char *data;
 
 } rc_mm_chunk_t;
@@ -131,15 +132,17 @@ int rc_mm_init()
 
 void rc_memset(void* p, unsigned char v, unsigned int len)
 {
-    for(; len > 0; len --) {
-        *_PTRC_(_PTRC_(p) + len) = v;
+    int i;
+    for(i = 0; i < len; i ++) {
+        *_PTRC_(_PTRC_(p) + i) = v;
     }
 }
 
 void rc_memcpy(void* dst, void *src, unsigned int len)
 {
-    for(; len > 0; len --) {
-        *_PTRC_(_PTRC_(dst) + len) = *_PTRC_(_PTRC_(src) + len);
+    int i;
+    for(i = 0; i < len; i ++) {
+        *_PTRC_(_PTRC_(dst) + i) = *_PTRC_(_PTRC_(src) + i);
     }
 }
 
@@ -148,6 +151,7 @@ void *rc_malloc(size_t size)
     int i;
     rc_mm_slab_t *p_slab;
     rc_mm_chunk_t *p_chunk;
+    unsigned int *chunk_head_addr;
     int index = size >> s_slab_para; /* size / s_slab_unit */
 
     while(index * s_slab_unit < size) {
@@ -165,9 +169,19 @@ void *rc_malloc(size_t size)
             p_chunk = p_slab->chunk_head;
             while(p_chunk->occupied) p_chunk = p_chunk->next;
 
-            p_chunk->data = frm_right_valid_next(size);
+            if(p_chunk->data != NULL) {
+                p_slab->alloced ++;
+                p_chunk->occupied = 1;
+                return p_chunk->data;
+            }
+
+            p_chunk->data = frm_right_valid_next(index * s_slab_unit);
+            chunk_head_addr = frm_right_valid_next(sizeof(unsigned int));
+            *chunk_head_addr = (unsigned int)&(p_slab->chunk_head);
+
             p_chunk->occupied = 1;
             p_slab->alloced ++;
+
             g_pt->exit_critical();
 
             return p_chunk->data;
@@ -195,13 +209,28 @@ void *rc_realloc(size_t size)
     return 0;
 }
 
-void rc_free()
+void rc_free(void *p)
 {
+    unsigned int *chunk_head_addr = (unsigned int*)(p - sizeof(unsigned int));
+    rc_mm_chunk_t **pp_chunk = (rc_mm_chunk_t**)(*chunk_head_addr);
+    rc_mm_chunk_t *chunk = *pp_chunk;
+    rc_mm_slab_t *slab = _SELF_(rc_mm_slab_t, chunk_head, (*pp_chunk));
+
+    while(chunk->data != p) {
+        chunk = chunk->next;
+        if(chunk == NULL) {
+            __DEBUG_ERR__("free wrong address");
+            g_pt->panic();
+        }
+    }
+    chunk->occupied = 0;
+    slab->alloced --;
 }
 
 void rc_dump_cache()
 {
     int i, j;
+    void *pp;
     rc_mm_slab_t *ps;
     rc_mm_chunk_t *pc;
 
@@ -209,9 +238,6 @@ void rc_dump_cache()
 
     printf("-----CACHE-----\n");
     for( i = 0; i < s_slab_nmax; i ++ ) {
-
-        //for(j = 0; j < 99999999; j ++);
-
         printf("[%d BYTES SLABS]", i * s_slab_unit);
 
         ps = &(s_cache.arr_slabs[i]);
@@ -221,11 +247,16 @@ void rc_dump_cache()
 
         printf("\n");
         while(ps) {
-            printf("-----slab-%d ", ps->id);
+            printf("-----slab-%d [%p]--------\n", ps->id, ps);
 
             pc = ps->chunk_head;
             while(pc) {
-                printf("([%d] %d %x) ", pc->id, pc->occupied, pc->data);
+                if(pc->data != NULL)
+                    pp = *(rc_mm_chunk_t**)*(int*)(pc->data - sizeof(unsigned int));
+                else
+                    pp = NULL;
+                printf("-----------chunk(%p:[%d] %d %x %p) \n", 
+                        pc, pc->id, pc->occupied, pc->data, pp);
                 pc = pc->next;
             }
             printf("\n");
@@ -346,10 +377,12 @@ static rc_mm_chunk_t* init_chunks(unsigned int chunk_size)
     ((rc_mm_chunk_t*)cur)->id = 0;
     ((rc_mm_chunk_t*)cur)->data = NULL;
     ((rc_mm_chunk_t*)cur)->occupied = 0;
+    ((rc_mm_chunk_t*)cur)->prev = NULL;
 
     for( i = 0; i < s_prsv_chunk - 1; i ++ ) {
 
         cur->next = frm_left_valid_next(sizeof(rc_mm_chunk_t));
+        cur->next->prev = cur;
         cur = cur->next;
         ((rc_mm_chunk_t*)cur)->id = i + 1;
         ((rc_mm_chunk_t*)cur)->data = NULL;

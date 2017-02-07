@@ -24,6 +24,8 @@ static void _arch_port_panic()
 {
     __DEBUG__
     printf("Kernel Panic!\n");
+
+    asm_close_irq();
     while(1);
 }
 
@@ -31,8 +33,6 @@ static void _arch_enter_critical()
 {
     asm_close_irq();
     s_arch_port.critical_nesting ++;
-    printf(" %d ", s_arch_port.critical_nesting);
-    __DEBUG__    
 }
 
 static void _arch_exit_critical()
@@ -41,9 +41,6 @@ static void _arch_exit_critical()
     if(s_arch_port.critical_nesting < 0) {
         s_arch_port.critical_nesting = 0;
     }
-
-    printf(" %d ", s_arch_port.critical_nesting);
-    __DEBUG__
 
     if(s_arch_port.critical_nesting == 0) {
         asm_open_irq();
