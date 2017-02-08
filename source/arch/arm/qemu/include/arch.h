@@ -38,6 +38,8 @@
 #define KC_TASK_TOP                        0x00800000
 #define KC_TASK_STACK_MINSIZE              0xff
 #define KC_TASK_MAX_NAME_LEN               64
+#define KC_TASK_STACK_TOP                  0x17000
+#define KC_TASK_STACK_LOW                  KC_TASK_STACK_TOP + 0x8000
 
 /* memory */
 #define KC_MEM_HEAP_LOW                    0x1f000
@@ -48,7 +50,7 @@
 
 typedef struct arch_registers_s
 {
-    unsigned int reg[18];
+    unsigned int regs[18];
 } arch_registers_t;
 
 /* Base types */

@@ -44,11 +44,18 @@ typedef struct port_s
     /* Enter&exit critical functions */
     void (*enter_critical)();
     void (*exit_critical)();
+
+    /* task functions */
+    void (*task_registers_init)(void *regs);
+    void (*task_switch)(void *regs, void *last_regs, unsigned int stack_low, unsigned int stack_size);
+
     unsigned long   critical_nesting;
 
     unsigned char*  uart0_addr;
     unsigned char*  uart1_addr;
 
+    unsigned char*  stack_top;
+    unsigned char*  stack_low;
     unsigned char*  heap_low;
     unsigned char*  heap_top;
     unsigned int    slab_unit;

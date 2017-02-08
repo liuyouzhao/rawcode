@@ -44,7 +44,7 @@ R15/PC:
 /*
 ======== R0-R4 Register Usage ===================
 ** Function Call <= 4 ************************************
-str lr, [sp, #-4]! // push current lr to sp pointed stack, let sp-=4
+str lr, [sp], #-4 // push current lr to sp pointed stack, let sp-=4
 ldr r0, =0x01      // param1
 ldr r1, =0x02      // param2
 ldr r2, =0x03      // param3
@@ -53,20 +53,20 @@ bl func_c          // jump function
 ldr lr, [sp], #4   // pop from sp pointed stack
 
 ** Function Call > 4 ************************************
-str lr, [sp, #-4]!
+str lr, [sp], #-4
 ldr r0, =0x01      // param1
 ldr r1, =0x02      // param2
 ldr r2, =0x03      // param3
 ldr r3, =0x04      // param4
 
 ldr r4, =0x08      // param8
-str r4, [sp, #-4]! // push param8 into sp pointed stack, let sp-=4
+str r4, [sp], #-4 // push param8 into sp pointed stack, let sp-=4
 ldr r4, =0x07      // param7
-str r4, [sp, #-4]!
+str r4, [sp], #-4
 ldr r4, =0x06      // param6
-str r4, [sp, #-4]!
+str r4, [sp], #-4
 ldr r4, =0x05      // param5
-str r4, [sp, #-4]!
+str r4, [sp], #-4
 
 bl func_c          // jump function
 
@@ -241,14 +241,15 @@ __not_used:
 /*    ldr r0,[lr,#-4]*/
 /*    mov r1,sp */
 __irq:
-    push {r0, r1, r2, lr}
+    push {r0-r3,lr}
     MRS r1, cpsr
     MOV r2, r1
     ORR r1, #0x80
     MSR cpsr_c, r1
     bl irq
+    @; Code below will never reach
     MSR cpsr_c, r2
-    pop {r0, r1, r2, lr}
+    pop {r0-r3,lr}
     subs pc,lr,#4
     
 __fiq:

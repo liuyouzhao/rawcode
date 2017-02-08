@@ -169,29 +169,38 @@ static inline l_node_t * __l_next(l_node_t **from)
 }
 
 #define __L_NODE_NAME __l_node_obj_160624065_
-#define __L_NODE__(lst) l_node_t __L_NODE_NAME##lst;
+#define __L_NODE__ l_node_t __L_NODE_NAME;
 #define list_add_tail(l,s) \
-    __l_add_tail(l, s.__L_NODE_NAME##l);
+    __l_add_tail(l, &(s->__L_NODE_NAME))
 #define list_add_head(l,s) \
-    __l_add_tail(l, s.__L_NODE_NAME##l);
+    __l_add_tail(l, &(s->__L_NODE_NAME))
 #define list_insert_ptr_next(l,p,s) \
-    __l_insert_ptr_next(l, p, s.__L_NODE_NAME##l);
+    __l_insert_ptr_next(l, &(p->__L_NODE_NAME), &(s->__L_NODE_NAME))
 #define list_insert_ptr_prev(l,p,s) \
-    __l_insert_ptr_prev(l, p, s.__L_NODE_NAME##l);
+    __l_insert_ptr_prev(l, &(p->__L_NODE_NAME), &(s->__L_NODE_NAME))
 #define list_insert_index_next(l,i,s) \
-    __l_insert_index_next(l, i, s.__L_NODE_NAME##l);
+    __l_insert_index_next(l, i, s->__L_NODE_NAME)
 #define list_insert_index_prev(l,i,s) \
-    __l_insert_index_prev(l, i, s.__L_NODE_NAME##l);
+    __l_insert_index_prev(l, i, s->__L_NODE_NAME)
 #define list_del_head(l) \
-    __l_del_head(l);
+    __l_del_head(l)
 #define list_del_tail(l) \
-    __l_del_tail(l);
+    __l_del_tail(l)
 #define list_pop_head(l) \
-    __l_pop_head(l);
+    __l_pop_head(l)
 #define list_pop_tail(l) \
-    __l_pop_tail(l);
+    __l_pop_tail(l)
 #define list_next(f) \
-    __l_next(&&f);
+    __l_next(&&f)
+
+#define list_node_container(t,n) \
+    _SELF_(t,__L_NODE_NAME,n)
+
+#define l_p_n(c) \
+    c->__L_NODE_NAME
+
+#define l_n(c) \
+    c.__L_NODE_NAME
 
 
 #endif /* __INCLUDE_LIST_H */

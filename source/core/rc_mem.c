@@ -201,12 +201,9 @@ void *rc_malloc(size_t size)
 
 void *rc_calloc(size_t size)
 {
-    return 0;
-}
-
-void *rc_realloc(size_t size)
-{
-    return 0;
+    void *p = rc_malloc(size);
+    rc_memset(p, 0, size);
+    return p;
 }
 
 void rc_free(void *p)
@@ -266,6 +263,9 @@ void rc_dump_cache()
     g_pt->exit_critical();
 }
 
+/**
+ * return how many heap left
+*/
 unsigned int rc_heap_left()
 {
     return s_heap.ptr_stack_heap_right - s_heap.ptr_stack_heap_left;

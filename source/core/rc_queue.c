@@ -2,18 +2,15 @@
 #include <utils/list.h>
 #include <port/port.h>
 
-typedef struct rc_queue_s
-{
-    list_t qlst;
-} rc_queue_t;
 
 typedef struct rc_node_s
 {
-    __L_NODE__(qlst)
+    __L_NODE__
 } rc_node_t;
 
+static list_t s_qlst;
 
-rc_queue_t* rc_queue_create()
+list_t* rc_queue_create()
 {
 }
 
@@ -21,7 +18,7 @@ int rc_queue_create_mutex()
 {
 }
 
-int rc_queue_add_tail(rc_queue_t *queue, rc_node_t *node)
+int rc_queue_add_tail(list_t qlst, rc_node_t *node)
 {
 }
 

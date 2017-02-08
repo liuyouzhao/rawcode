@@ -47,6 +47,43 @@ static void _arch_exit_critical()
     }
 }
 
+static void _arch_task_registers_init(void *registers)
+{
+    int i;
+    for( i = 0; i < 18; i ++ )
+        ((rc_registers_t*)registers)->regs[i] = 0;
+}
+
+static void _arch_task_switch(void *regs, void *last_regs,
+                                unsigned int stack_low, unsigned int stack_size)
+{
+    rc_registers_t *rgs = regs;
+    rc_registers_t *lst_rgs = last_regs;
+    int i;
+
+    if(lst_rgs) {
+        printf("BEFORE: \n");
+        for(i = 0; i < 18; i ++) {
+            printf("r%d: %x ", i, lst_rgs->regs[i]);
+            if((i + 1) % 4 == 0) {
+                printf("\n");
+            }
+        }
+        printf("\n");
+        asm_task_save_context(lst_rgs->regs);
+
+        printf("AFTER: \n");
+        for(i = 0; i < 18; i ++) {
+            printf("r%d: %x ", i, lst_rgs->regs[i]);
+            if((i + 1) % 4 == 0) {
+                printf("\n");
+            }
+        }
+        printf("\n");
+    }
+
+}
+
 static port_t s_arch_port =
 {
     .reset = _arch_port_reset,
@@ -59,11 +96,17 @@ static port_t s_arch_port =
     .uart0_addr = (unsigned char*) IC_UART0,
     .uart1_addr = (unsigned char*) IC_UART1,
 
+    /* Tasks */
+    .stack_top = (unsigned char*) KC_TASK_STACK_TOP,
+    .task_registers_init = _arch_task_registers_init,
+    .task_switch = _arch_task_switch,
+
+    /* Memory */
     .heap_low = (unsigned char*) KC_MEM_HEAP_LOW,
     .heap_top = (unsigned char*) KC_MEM_HEAP_TOP,
     .slab_unit = KC_MEM_SLAB_UNIT,
     .slab_nmax = KC_MEM_SLAB_NMAX,
-    .prsv_chunk = KC_MEM_PRESERVE_CHUNK
+    .prsv_chunk = KC_MEM_PRESERVE_CHUNK,
 };
 
 void arch_init()
