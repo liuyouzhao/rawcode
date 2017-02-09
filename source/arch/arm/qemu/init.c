@@ -2,10 +2,26 @@
 #include <arch.h>
 #include <utils/util.h>
 
+int rc_task_create(const char* name, void (*pfunc) (void* para), 
+                            unsigned int stacksize, unsigned int prior, void *para);
+
+
+void task1(void* para)
+{
+    printf("task1\n");
+}
+
+void task2(void* para)
+{
+    printf("task2\n");
+}
+
+
 int init()
 {
     int begin = 0x0;
     int cmd = 0x0;
+    int ret;
     
     for(begin = 0x0; begin < 0x80; begin += 0x4)
     {
@@ -31,6 +47,10 @@ int init()
 
     /* test go */
     test_mem();
+
+
+    ret = rc_task_create("task1", task1, 4096, 10, NULL);
+    ret |= rc_task_create("task2", task2, 4096, 10, NULL);
 
     for(;;) {}
 

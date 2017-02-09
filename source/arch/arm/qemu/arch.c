@@ -81,7 +81,9 @@ static void _arch_task_switch(void *regs, void *last_regs,
         }
         printf("\n");
     }
-
+    else {
+        printf("There's only one task\n");
+    }
 }
 
 static port_t s_arch_port =

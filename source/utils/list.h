@@ -134,16 +134,20 @@ static inline int __l_insert_index_prev(list_t *lst, unsigned int index, l_node_
 
 static inline int __l_del_head(list_t *lst)
 {
+    l_node_t *p = lst->p_head;
     lst->p_head = lst->p_head->p_next;
     lst->p_head->p_prev = 0;
+    p->p_next = p->p_prev = 0;
     lst->len --;
     return lst->len;
 }
 
 static inline int __l_del_tail(list_t *lst)
 {
+    l_node_t *p = lst->p_tail;
     lst->p_tail = lst->p_tail->p_prev;
     lst->p_tail->p_next = 0;
+    p->p_next = p->p_prev = 0;
     lst->len --;
     return lst->len;
 }
