@@ -47,43 +47,58 @@ static void _arch_exit_critical()
     }
 }
 
-static void _arch_task_registers_init(void *registers)
+static void _arch_task_registers_init(void *registers, void *entry)
 {
     int i;
     for( i = 0; i < 18; i ++ )
         ((rc_registers_t*)registers)->regs[i] = 0;
+
+    ((rc_registers_t*)registers)->regs[14] = (unsigned int) entry;
+    ((rc_registers_t*)registers)->regs[15] = (unsigned int) entry;
 }
 
 static void _arch_task_switch(void *regs, void *last_regs,
-                                unsigned int stack_low, unsigned int stack_size)
+                                unsigned int stack_low, unsigned int stack_size, void* para)
 {
     rc_registers_t *rgs = regs;
     rc_registers_t *lst_rgs = last_regs;
     int i;
 
     if(lst_rgs) {
-        printf("BEFORE: \n");
-        for(i = 0; i < 18; i ++) {
-            printf("r%d: %x ", i, lst_rgs->regs[i]);
-            if((i + 1) % 4 == 0) {
-                printf("\n");
-            }
-        }
-        printf("\n");
         asm_task_save_context(lst_rgs->regs);
 
-        printf("AFTER: \n");
+        printf("SAVED: \n");
         for(i = 0; i < 18; i ++) {
             printf("r%d: %x ", i, lst_rgs->regs[i]);
             if((i + 1) % 4 == 0) {
                 printf("\n");
             }
         }
+
         printf("\n");
     }
-    else {
-        printf("There's only one task\n");
+
+    /* First time running */
+    if(rgs->regs[13] == 0x0) {
+
+        rgs->regs[13] = stack_low;
+        rgs->regs[0] = (unsigned int)para;
+
+        asm_task_switch_context(rgs->regs);
+        return;
     }
+
+    asm_task_save_context(rgs->regs);
+    printf("\nSWITCH: \n");
+    for(i = 0; i < 18; i ++) {
+        printf("r%d: %x ", i, rgs->regs[i]);
+        if((i + 1) % 4 == 0) {
+            printf("\n");
+        }
+    }
+    printf("\n");
+    
+    asm_task_switch_context(rgs->regs);
 }
 
 static port_t s_arch_port =
@@ -99,6 +114,7 @@ static port_t s_arch_port =
     .uart1_addr = (unsigned char*) IC_UART1,
 
     /* Tasks */
+    .stack_low = (unsigned char*) KC_TASK_STACK_LOW,
     .stack_top = (unsigned char*) KC_TASK_STACK_TOP,
     .task_registers_init = _arch_task_registers_init,
     .task_switch = _arch_task_switch,
@@ -115,4 +131,14 @@ void arch_init()
 {
     arch_tick_init();
     g_pt = &s_arch_port;
+}
+
+void arch_debug_dump_register()
+{
+    unsigned int *p = (unsigned int*)0x14000;
+    int i = 0;
+    for(; i < 6; i ++) {
+        printf("r%d %x ", i, *p);
+        p --;
+    }
 }

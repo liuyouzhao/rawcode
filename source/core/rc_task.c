@@ -61,6 +61,8 @@ int rc_task_create(const char* name, void (*pfunc) (void* para),
 {
     rc_task_t *tsk;
 
+    g_pt->enter_critical();
+
     if(s_lst_tasks.len >= KC_TASK_MAX_NUM || 
         s_cur_stack_ptr - stacksize < g_pt->stack_top) {
         __DEBUG__
@@ -81,8 +83,13 @@ int rc_task_create(const char* name, void (*pfunc) (void* para),
     tsk->stack_size = stacksize;
     tsk->entry = pfunc;
 
-    g_pt->task_registers_init(&(tsk->regs));
+    g_pt->task_registers_init(&(tsk->regs), tsk->entry);
     put_to_ready_list(tsk);
+
+    s_cur_stack_ptr -= stacksize;
+
+    g_pt->exit_critical();
+
     return 0;
 }
 
@@ -94,7 +101,12 @@ void rc_task_switch()
     g_pt->enter_critical();
 
     if(s_lst_ready.len == 0) {
-        __DEBUG_ERR__("Ready length is 0");
+        printf("Ready length is 0");
+        if(s_ptsk_running != NULL) {
+             g_pt->task_switch(&(s_ptsk_running->regs), NULL,
+                            s_ptsk_running->stack_low, s_ptsk_running->stack_size,
+                            s_ptsk_running->para);
+        }
         goto exit;
     }
 
@@ -102,7 +114,8 @@ void rc_task_switch()
         pn = list_pop_head(&s_lst_ready);
         s_ptsk_running = list_node_container(rc_task_t, *pn);
         g_pt->task_switch(&(s_ptsk_running->regs), NULL,
-                            s_ptsk_running->stack_low, s_ptsk_running->stack_size);
+                            s_ptsk_running->stack_low, s_ptsk_running->stack_size,
+                            s_ptsk_running->para);
         goto exit;
     }
     last = s_ptsk_running;
@@ -111,8 +124,10 @@ void rc_task_switch()
     pn = list_pop_head(&s_lst_ready);
     s_ptsk_running = list_node_container(rc_task_t, *pn);
 
+    printf("Switch to running task: %p  node: %p\n", s_ptsk_running, pn);
     g_pt->task_switch(&(s_ptsk_running->regs), last,
-                        s_ptsk_running->stack_low, s_ptsk_running->stack_size);
+                        s_ptsk_running->stack_low, s_ptsk_running->stack_size,
+                        s_ptsk_running->para);
 exit:
     g_pt->exit_critical();
 }

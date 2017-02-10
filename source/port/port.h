@@ -46,8 +46,10 @@ typedef struct port_s
     void (*exit_critical)();
 
     /* task functions */
-    void (*task_registers_init)(void *regs);
-    void (*task_switch)(void *regs, void *last_regs, unsigned int stack_low, unsigned int stack_size);
+    void (*task_registers_init)(void *regs, void *entry);
+    void (*task_switch)(void *regs, void *last_regs, 
+                        unsigned int stack_low, unsigned int stack_size,
+                        void *para);
 
     unsigned long   critical_nesting;
 
