@@ -16,6 +16,15 @@ int arch_tick_init()
 	return 0;
 }
 
+int arch_tick_enable()
+{
+    *_PTR_(_PTR_(IC_TIMER0) + TIMER_CONTROL) |= TIMER_EN;
+}
+
+int arch_tick_disable()
+{
+    *_PTR_(_PTR_(IC_TIMER0) + TIMER_CONTROL) &= ~0x80;
+}
 
 int arch_tick_done()
 {

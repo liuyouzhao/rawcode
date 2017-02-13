@@ -47,7 +47,7 @@ void irq()
 
             /* dispatch irq */
             if((vec = _PTRFV_(_ARR_(&s_irq_vecs)[n]))) {
-                vec();            
+                vec();
             }
         }
     }

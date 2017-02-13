@@ -8,7 +8,7 @@ int rc_task_create(const char* name, void (*pfunc) (void* para),
 
 void task1(void* para)
 {
-    int i = 0;
+    int i = 9;
     int j = 0;
     const char* a = "hello what's your name";
     printf("task1=====start\n");
@@ -65,7 +65,7 @@ int init()
 
 
     ret = rc_task_create("task1", task1, 4096, 10, NULL);
-    //ret |= rc_task_create("task2", task2, 4096, 10, NULL);
+    ret |= rc_task_create("task2", task2, 4096, 10, NULL);
 
     int i = 0;
     for(;;) {

@@ -241,38 +241,35 @@ __not_used:
 /*    ldr r0,[lr,#-4]*/
 /*    mov r1,sp */
 __irq:
+    PUSH {r4}
     LDR r4, =0x14000
-    MRS r5, cpsr
     STR r0, [r4]
     STR r1, [r4, #-4]
     STR r2, [r4, #-4*2]
     STR r3, [r4, #-4*3]
-    STR r4, [r4, #-4*4]
+    MOV r3, r4
+    POP {r4}
+    STR r4, [r3, #-4*4]
+    MOV r4, r3
     STR r5, [r4, #-4*5]
     STR r6, [r4, #-4*6]
     STR r7, [r4, #-4*7]
-    STR lr, [r4, #-4*8]
-    STR r5, [r4, #-4*9]
+    STR r8, [r4, #-4*8]
+    STR r9, [r4, #-4*9]
+    STR r10, [r4, #-4*10]
+    STR r11, [r4, #-4*11]
+    STR r12, [r4, #-4*12]
+    STR lr, [r4, #-4*15]
+    MRS r5, cpsr
+    STR r5, [r4, #-4*16]
+    MRS r5, spsr
+    STR r5, [r4, #-4*17]
 
-    bl arch_debug_dump_register
     MRS r1, cpsr
     MOV r2, r1
     ORR r1, #0x80
     MSR cpsr_c, r1
     bl irq
-
-    @; Code below will never reach
-    MSR cpsr_c, r2
-
-    LDR r4, =0x14000
-    LDR r0, [r4]
-    LDR r1, [r4, #-4]
-    LDR r2, [r4, #-4*2]
-    LDR r3, [r4, #-4*3]
-    LDR lr, [r4, #-4*4]
-
-    subs pc,lr,#4
-
   
 __fiq:
     ldr	pc, fiq_handle

@@ -64,9 +64,11 @@ static void _arch_task_switch(void *regs, void *last_regs,
     rc_registers_t *lst_rgs = last_regs;
     int i;
 
+    arch_tick_disable();
+
     if(lst_rgs) {
         asm_task_save_context(lst_rgs->regs);
-
+#if 1
         printf("SAVED: \n");
         for(i = 0; i < 18; i ++) {
             printf("r%d: %x ", i, lst_rgs->regs[i]);
@@ -74,21 +76,31 @@ static void _arch_task_switch(void *regs, void *last_regs,
                 printf("\n");
             }
         }
-
+#endif
         printf("\n");
     }
-
+    __DEBUG__
     /* First time running */
     if(rgs->regs[13] == 0x0) {
-
+        __DEBUG__
         rgs->regs[13] = stack_low;
         rgs->regs[0] = (unsigned int)para;
-
+        arch_tick_enable();
         asm_task_switch_context(rgs->regs);
         return;
     }
+    __DEBUG__
+#if 1
+    unsigned int *pr = (unsigned int*)(0x14000);
+    printf("\nBefore Save===========: \n");
+    for(i = 0; i < 18; i ++) {
+        printf("r%d: %x ", i, *(unsigned int*)(pr - i));
+        if((i + 1) % 4 == 0) {
+            printf("\n");
+        }
+    }
 
-    asm_task_save_context(rgs->regs);
+//    asm_task_save_context(last_regs);
     printf("\nSWITCH: \n");
     for(i = 0; i < 18; i ++) {
         printf("r%d: %x ", i, rgs->regs[i]);
@@ -97,7 +109,8 @@ static void _arch_task_switch(void *regs, void *last_regs,
         }
     }
     printf("\n");
-    
+#endif
+    arch_tick_enable();
     asm_task_switch_context(rgs->regs);
 }
 
@@ -131,14 +144,4 @@ void arch_init()
 {
     arch_tick_init();
     g_pt = &s_arch_port;
-}
-
-void arch_debug_dump_register()
-{
-    unsigned int *p = (unsigned int*)0x14000;
-    int i = 0;
-    for(; i < 6; i ++) {
-        printf("r%d %x ", i, *p);
-        p --;
-    }
 }
