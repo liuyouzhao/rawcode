@@ -36,14 +36,20 @@ static list_t s_lst_spded;
 static rc_task_t *s_ptsk_running;
 static unsigned char *s_cur_stack_ptr;
 
+static int s_entered;
+static unsigned long s_last_tick = 0;
+
+/**
+ * inner static functions
+*/
 static void put_to_ready_list(rc_task_t *tsk);
-void rc_task_switch();
+static void task_tick_switch();
+static void rc_task_sys_tick();
+static void rc_task_swi();
 
-static void rc_task_sys_tick()
-{
-    rc_task_switch();
-}
-
+/*
+ * Task API
+*/
 int rc_task_init()
 {
     s_cur_stack_ptr = g_pt->stack_low;
@@ -53,7 +59,10 @@ int rc_task_init()
     s_lst_blcked.len = 0;
     s_lst_spded.len = 0;
 
-    arch_bind_systick(rc_task_sys_tick);
+    s_entered = 0;
+
+    g_pt->arch_bind_systick(rc_task_sys_tick);
+    g_pt->arch_bind_swi(rc_task_swi);
 }
 
 int rc_task_create(const char* name, void (*pfunc) (void* para), 
@@ -93,7 +102,78 @@ int rc_task_create(const char* name, void (*pfunc) (void* para),
     return 0;
 }
 
-void rc_task_switch()
+void rc_task_enter_section()
+{
+    s_entered ++;
+    s_last_tick = g_pt->global_tick;
+}
+
+void rc_task_exit_section()
+{
+    s_entered --;
+    if(s_entered < 0) s_entered = 0;
+}
+
+void rc_task_clear_section()
+{
+    s_entered = 0;
+}
+
+void rc_task_interrupt()
+{
+    g_pt->enter_critical();
+    rc_task_clear_section();
+    g_pt->task_interrupt();
+}
+
+void rc_task_try_swicth()
+{
+    l_node_t *pn;
+    rc_task_t *last;
+
+    if(s_last_tick < g_pt->global_tick) {
+        g_pt->enter_critical();
+        rc_task_clear_section();
+        
+        if(s_lst_ready.len == 0) {
+            g_pt->exit_critical();
+            return;
+        }
+
+        last = s_ptsk_running;
+        put_to_ready_list(s_ptsk_running);
+
+        pn = list_pop_head(&s_lst_ready);
+        s_ptsk_running = list_node_container(rc_task_t, *pn);
+
+        kprintf("swt---> %p %p\n", s_ptsk_running, last);
+
+        if(s_ptsk_running->regs.regs[13] == 0x0) {
+
+            s_ptsk_running->regs.regs[13] = s_ptsk_running->stack_low;
+            s_ptsk_running->regs.regs[0] = (unsigned int)s_ptsk_running->para;
+        }
+        asm_task_save_switch(last->regs.regs, s_ptsk_running->regs.regs);
+    }
+}
+
+static void rc_task_sys_tick()
+{
+    if(s_entered) {
+        return;
+    }
+    task_tick_switch();
+}
+
+static void rc_task_swi()
+{
+    if(s_entered) {
+        return;
+    }
+    task_tick_switch();
+}
+
+static void task_tick_switch()
 {
     l_node_t *pn;
     rc_task_t *last;
@@ -101,7 +181,6 @@ void rc_task_switch()
     g_pt->enter_critical();
 
     if(s_lst_ready.len == 0) {
-        printf("Ready length is 0");
         if(s_ptsk_running != NULL) {
              g_pt->task_switch(&(s_ptsk_running->regs), NULL,
                             s_ptsk_running->stack_low, s_ptsk_running->stack_size,
@@ -124,7 +203,6 @@ void rc_task_switch()
     pn = list_pop_head(&s_lst_ready);
     s_ptsk_running = list_node_container(rc_task_t, *pn);
 
-    printf("Switch to running task: %p  node: %p\n", s_ptsk_running, pn);
     g_pt->task_switch(&(s_ptsk_running->regs), last,
                         s_ptsk_running->stack_low, s_ptsk_running->stack_size,
                         s_ptsk_running->para);
@@ -152,7 +230,6 @@ static void put_to_ready_list(rc_task_t *tsk)
 
         p = s_lst_ready.p_head;
         while(p) {
-            printf("ready_list: %p\n", p);
             p = p->p_next;
         }
 

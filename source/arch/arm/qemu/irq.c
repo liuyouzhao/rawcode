@@ -33,7 +33,7 @@ void irq()
     int n = 0;
     int irq_stats = getreg32(IC_VIC_BASE);
 
-    __DEBUG__
+    kprintf("\n->\n");
 
     void (*vec)();
     void (*ack)();

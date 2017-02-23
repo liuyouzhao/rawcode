@@ -1,12 +1,16 @@
 #include <arch.h>
 #include <utils/util.h>
 #include <port/port.h>
+#include "irq.h"
+#include "swi.h"
 
 /************************************
 * Global address pointers definition
 *************************************/
 unsigned char* glb_output_uart_addr = (unsigned char*) IC_UART0;
 static port_t s_arch_port;
+static int s_closed_irq = 0;
+extern unsigned long timer_tick;
 
 /********************************
  * Register base functions
@@ -23,7 +27,7 @@ static void _arch_port_reset()
 static void _arch_port_panic()
 {
     __DEBUG__
-    printf("Kernel Panic!\n");
+    kprintf("Kernel Panic!\n");
 
     asm_close_irq();
     while(1);
@@ -67,51 +71,58 @@ static void _arch_task_switch(void *regs, void *last_regs,
     arch_tick_disable();
 
     if(lst_rgs) {
+        unsigned int *pr = (unsigned int*)(0x14000);
+        kprintf("\nBefore Save===========: \n");
+        for(i = 0; i < 18; i ++) {
+            kprintf("r%d: %x ", i, *(unsigned int*)(pr - i));
+            if((i + 1) % 4 == 0) {
+                kprintf("\n");
+            }
+        }
+
+        kprintf("save context \n");
         asm_task_save_context(lst_rgs->regs);
 #if 1
-        printf("SAVED: \n");
+        kprintf("SAVED: \n");
         for(i = 0; i < 18; i ++) {
-            printf("r%d: %x ", i, lst_rgs->regs[i]);
+            kprintf("r%d: %x ", i, lst_rgs->regs[i]);
             if((i + 1) % 4 == 0) {
-                printf("\n");
+                kprintf("\n");
             }
         }
 #endif
-        printf("\n");
+        kprintf("\n");
     }
-    __DEBUG__
+
     /* First time running */
     if(rgs->regs[13] == 0x0) {
-        __DEBUG__
+
         rgs->regs[13] = stack_low;
         rgs->regs[0] = (unsigned int)para;
         arch_tick_enable();
         asm_task_switch_context(rgs->regs);
         return;
     }
-    __DEBUG__
+
 #if 1
-    unsigned int *pr = (unsigned int*)(0x14000);
-    printf("\nBefore Save===========: \n");
-    for(i = 0; i < 18; i ++) {
-        printf("r%d: %x ", i, *(unsigned int*)(pr - i));
-        if((i + 1) % 4 == 0) {
-            printf("\n");
-        }
-    }
+  
 
 //    asm_task_save_context(last_regs);
-    printf("\nSWITCH: \n");
+    kprintf("\nSWITCH: \n");
     for(i = 0; i < 18; i ++) {
-        printf("r%d: %x ", i, rgs->regs[i]);
+        kprintf("r%d: %x ", i, rgs->regs[i]);
         if((i + 1) % 4 == 0) {
-            printf("\n");
+            kprintf("\n");
         }
     }
-    printf("\n");
+    kprintf("\n");
 #endif
     arch_tick_enable();
     asm_task_switch_context(rgs->regs);
+}
+
+void _arch_task_enter_swi() {
+    asm_task_enter_swi();
 }
 
 static port_t s_arch_port =
@@ -131,6 +142,10 @@ static port_t s_arch_port =
     .stack_top = (unsigned char*) KC_TASK_STACK_TOP,
     .task_registers_init = _arch_task_registers_init,
     .task_switch = _arch_task_switch,
+    .task_interrupt = _arch_task_enter_swi,
+
+    .arch_bind_systick = arch_bind_systick,
+    .arch_bind_swi = arch_bind_swi,
 
     /* Memory */
     .heap_low = (unsigned char*) KC_MEM_HEAP_LOW,
@@ -138,10 +153,18 @@ static port_t s_arch_port =
     .slab_unit = KC_MEM_SLAB_UNIT,
     .slab_nmax = KC_MEM_SLAB_NMAX,
     .prsv_chunk = KC_MEM_PRESERVE_CHUNK,
+
+    /* Global tick */
+    .global_tick = 0
 };
 
 void arch_init()
 {
     arch_tick_init();
     g_pt = &s_arch_port;
+}
+
+void __dbg__() {
+    static int i = 0;
+    kprintf("dgb %d\n", i++);
 }

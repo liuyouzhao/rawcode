@@ -2,6 +2,7 @@
 #include <timer.h>
 #include <irq.h>
 
+#include <port/port.h>
 #include <utils/util.h>
 
 #define VIC_INT_ENABLE (volatile unsigned int*)(IC_VIC_BASE + VIC_TIMER0)
@@ -31,4 +32,5 @@ int arch_tick_done()
     if(*(_PTR_(IC_TIMER0) + TIMER_MIS)) {
         *(_PTR_(IC_TIMER0) + TIMER_INTCLR) = 1;
     }
+    g_pt->global_tick ++;
 }

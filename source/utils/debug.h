@@ -41,16 +41,15 @@
  * uart0 printf
 ********************************/
 extern unsigned char* glb_output_uart_addr;
-void dbg_printhex32(int hex);
-void dbg_printnum10(int num);
-void dbg_printf(const char* text);
 void dbg_printf_ext(const char* text, ...);
-
+void dbg_printf(const char* text);
 void dbg_dump_stack();
 
 #define printf dbg_printf_ext
+#define kprintf dbg_printf_ext_kernel
 #define __DEBUG__ printf("%s [%s:%d]\n", __FILE__, __FUNCTION__, __LINE__);
-
+#define __KDEBUG__ kprintf("%s [%s:%d]\n", __FILE__, __FUNCTION__, __LINE__);
 
 #define __DEBUG_ERR__(a) printf("[Fatal error] "a"\n");
+#define __KDEBUG_ERR__(a) kprintf("[Fatal error] "a"\n");
 #endif

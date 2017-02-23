@@ -50,6 +50,12 @@ typedef struct port_s
     void (*task_switch)(void *regs, void *last_regs, 
                         unsigned int stack_low, unsigned int stack_size,
                         void *para);
+    void (*task_interrupt)();
+
+    /* interrupt setup functions */
+    void (*arch_bind_systick)(void (*systick)());
+    void (*arch_bind_swi)(void (*swi)());
+
 
     unsigned long   critical_nesting;
 
@@ -63,6 +69,8 @@ typedef struct port_s
     unsigned int    slab_unit;
     unsigned int    slab_nmax;
     unsigned int    prsv_chunk;
+
+    unsigned long   global_tick;
 
 } port_t;
 

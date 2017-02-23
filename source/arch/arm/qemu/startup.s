@@ -241,6 +241,7 @@ __not_used:
 /*    ldr r0,[lr,#-4]*/
 /*    mov r1,sp */
 __irq:
+    PUSH {lr}
     PUSH {r4}
     LDR r4, =0x14000
     STR r0, [r4]
@@ -270,6 +271,9 @@ __irq:
     ORR r1, #0x80
     MSR cpsr_c, r1
     bl irq
+
+    POP {lr}
+    SUBS pc,lr,#4
   
 __fiq:
     ldr	pc, fiq_handle

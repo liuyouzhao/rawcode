@@ -1,9 +1,15 @@
 .code 32
 
+.global asm_task_enter_swi
+asm_task_enter_swi:
+    push {lr}
+    swi 0x123
+    pop {lr}
+    bx lr
+
 .global asm_task_save_context
 asm_task_save_context:
-
-    PUSH    {r4}
+    PUSH    {r4, lr}
     LDR     r4, =0x14000
 
     PUSH    {r0, r1}
@@ -60,12 +66,9 @@ asm_task_save_context:
     LDR     r1, [r4, #-4*12]
     STR     r1, [r0, #4*12]
 
-
     @; save lr to array pc
-    PUSH    {lr}
-    LDR     lr, [r4, #-4*15]
-    STR     lr, [r0, #4*15]
-    POP     {lr}
+    LDR     r1, [r4, #-4*15]
+    STR     r1, [r0, #4*15]
 
     @; save cpsr
     LDR     r5, [r4, #-4*16]
@@ -91,6 +94,7 @@ asm_task_save_context:
     AND     r1, #0x12
     MSR     cpsr_c, r1
 
+    POP     {r4, lr}
     BX      lr
 
 
@@ -141,8 +145,35 @@ asm_task_switch_context:
     LDR     pc, __SAVE_P0
 __SAVE_P0: .word 0x14000
 
+
 .global asm_get_sp
 asm_get_sp:
     MOV r0, sp
-    mov pc, lr
-    
+    MOV pc, lr
+
+
+.global asm_task_save_switch
+asm_task_save_switch:
+    STR     r0,  [r0]
+    STR     r1,  [r0, #4]
+    STR     r2,  [r0, #4*2]
+    STR     r3,  [r0, #4*3]
+    STR     r4,  [r0, #4*4]
+    STR     r5,  [r0, #4*5]
+    STR     r6,  [r0, #4*6]
+    STR     r7,  [r0, #4*7]
+    STR     r8,  [r0, #4*8]
+    STR     r9,  [r0, #4*9]
+    STR     r10,  [r0, #4*10]
+    STR     r11,  [r0, #4*11]
+    STR     r12,  [r0, #4*12]
+    STR     r13,  [r0, #4*13]
+    STR     r14,  [r0, #4*14]
+    STR     r15,  [r0, #4*15]
+    MRS     r5, cpsr
+    STR     r5,  [r0, #4*16]
+    MRS     r5, spsr
+    STR     r5,  [r0, #4*17]
+    MOV     r0, r1
+    B       asm_task_switch_context
+

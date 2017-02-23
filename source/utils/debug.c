@@ -1,6 +1,7 @@
 #include <utils/debug.h>
+#include <port/port.h>
 
-void dbg_printhex32(int hex)
+static void dbg_printhex32(int hex)
 {
     int i = 0;
     int l = 0;
@@ -19,7 +20,7 @@ void dbg_printhex32(int hex)
     }
 }
 
-void dbg_printnum10(int num)
+static void dbg_printnum10(int num)
 {
     int i = num;
     int d = 0;
@@ -64,7 +65,13 @@ void dbg_printf_ext(const char* text, ...)
     char c = 0;
     char* pstr = 0;
     double f = 0.0f;
-        
+
+    if(g_pt == 0) {
+        return;
+    }
+
+    rc_task_enter_section();
+
     va_list ap;
     va_start(ap, text);  
 
@@ -97,8 +104,49 @@ void dbg_printf_ext(const char* text, ...)
         tmp ++;
     }
     va_end(ap);
+
+    rc_task_try_swicth();
 }
 
-void dbg_dump_stack()
+void dbg_printf_ext_kernel(const char* text, ...)
 {
+    char* tmp = (char*) text;
+    char close = 0;
+    int n = 0;
+    char c = 0;
+    char* pstr = 0;
+    double f = 0.0f;
+
+    va_list ap;
+    va_start(ap, text);  
+
+    while((*tmp) != '\0')
+    {
+        if(*tmp == '%' && (*(tmp + 1) == 'x' || *(tmp + 1) == 'p')) {
+            n = va_arg(ap, int);
+            dbg_printhex32(n);
+            tmp ++;
+        }
+        else if(*tmp == '%' && *(tmp + 1) == 'd') {
+            n = va_arg(ap, int);
+            dbg_printnum10(n);
+            tmp ++;
+        } else if(*tmp == '%' && *(tmp + 1) == 'c') {
+            c = va_arg(ap, int);
+            *glb_output_uart_addr = c;
+            tmp ++;
+        } else if(*tmp == '%' && *(tmp + 1) == 's') {
+            pstr = va_arg(ap, char*);
+            dbg_printf(pstr);
+            tmp ++;
+        } else if(*tmp == '%' && *(tmp + 1) == 'f') {  
+            /// Not Implement
+            *glb_output_uart_addr = *tmp;
+        }
+        else {
+            *glb_output_uart_addr = *tmp;
+        }
+        tmp ++;
+    }
+    va_end(ap);
 }

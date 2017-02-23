@@ -1,9 +1,20 @@
 #include <arch.h>
 #include <utils/util.h>
+#include <swi.h>
+
+void (*swi_handler)();
+
+void arch_bind_swi(void (*swi)())
+{
+    swi_handler = swi;
+}
 
 void software_interrupt(unsigned int inst, unsigned int sp)
 {
-    __DEBUG__
+    __KDEBUG__
+    if(swi_handler != 0) {
+        swi_handler();
+    }
 }
 
 /*************************************************

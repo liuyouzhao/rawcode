@@ -8,14 +8,14 @@ int rc_task_create(const char* name, void (*pfunc) (void* para),
 
 void task1(void* para)
 {
-    int i = 9;
+    int i = 0;
     int j = 0;
     const char* a = "hello what's your name";
     printf("task1=====start\n");
     while(1) {
         i ++;
         printf("task1:%d  %s  sp: %p a: %p %p %p\n", i, a, asm_get_sp(), &a, &i, &j);
-        for(j = 0; j < 1000000; j ++);
+        //for(j = 0; j < 1000000; j ++);
         //printf("task1[%d] \n", i ++);
     }
 }
@@ -28,7 +28,7 @@ void task2(void* para)
     while(1) {
         i ++;
         printf("task2:%d  %p\n", i, asm_get_sp());
-        for(j = 0; j < 1000000; j ++);
+        //for(j = 0; j < 1000000; j ++);
         //printf("task2[%d] \n", i ++);
     }
 }
@@ -55,7 +55,6 @@ int init()
      */
     //asm_mpu_config();
 
-
     arch_init();
     rc_task_init();
     rc_mm_init();
@@ -66,6 +65,8 @@ int init()
 
     ret = rc_task_create("task1", task1, 4096, 10, NULL);
     ret |= rc_task_create("task2", task2, 4096, 10, NULL);
+
+    kprintf("finished init\n");
 
     int i = 0;
     for(;;) {
