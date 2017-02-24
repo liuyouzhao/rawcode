@@ -1,9 +1,55 @@
+/********************************************************************************
+ * core/rc_task.c
+ *
+ *   Copyright (C) 2016,2017 Frodo Liu. All rights reserved.
+ *   Author: Frodo Liu <liuyouzhao@hotmail.com>
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ * 3. Neither the name RawCode nor the names of its contributors may be
+ *    used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ ********************************************************************************/
+
 #include <string.h>
 #include <utils/util.h>
 #include <utils/list.h>
 #include <port/port.h>
 #include <arch.h>
 
+/**
+ rc_task_t
+ One rc_task_t pointer for each task user created.
+ @regs: rc_registers_t given in arch.c
+ @prio: priority
+ @stack_low: the low address of this task's stack
+ @stack_size: stack_low + stack_size == stack_top
+ @task_name: whatever
+ @entry: entry function pointer
+ @para: fixed pointer as parameter be passed into the entry function
+*/
 typedef struct rc_task_s
 {
     rc_registers_t regs;
@@ -21,22 +67,28 @@ typedef struct rc_task_s
     __L_NODE__
 } rc_task_t;
 
-typedef struct rc_tskstat_s
-{
-    unsigned int id;
-    unsigned int stat;
-    __L_NODE__
-} rc_tskstat_t;
-
+/* All tasks list */
 static list_t s_lst_tasks;
+
+/* Ready list */
 static list_t s_lst_ready;
+
+/* Blocked list */
 static list_t s_lst_blcked;
+
+/* Suspended list*/
 static list_t s_lst_spded;
 
+/* Runing task */
 static rc_task_t *s_ptsk_running;
+
+/* stack address the next new thread begin from as its stack_low */
 static unsigned char *s_cur_stack_ptr;
 
+/* entering section counter */
 static int s_entered;
+
+/* last tick number */
 static unsigned long s_last_tick = 0;
 
 /**
@@ -50,21 +102,12 @@ static void rc_task_swi();
 /*
  * Task API
 */
-int rc_task_init()
-{
-    s_cur_stack_ptr = g_pt->stack_low;
 
-    s_lst_tasks.len = 0;
-    s_lst_ready.len = 0;
-    s_lst_blcked.len = 0;
-    s_lst_spded.len = 0;
-
-    s_entered = 0;
-
-    g_pt->arch_bind_systick(rc_task_sys_tick);
-    g_pt->arch_bind_swi(rc_task_swi);
-}
-
+/**
+ * Create new task
+ * your task function will never end, otherwise it will cause problems
+ * like for(;;) or while(1) available, for keeping coherent jumping logic.
+*/
 int rc_task_create(const char* name, void (*pfunc) (void* para), 
                             unsigned int stacksize, unsigned int prior, void *para)
 {
@@ -102,23 +145,35 @@ int rc_task_create(const char* name, void (*pfunc) (void* para),
     return 0;
 }
 
+/**
+ * Enter section means pause switching temporarily
+*/
 void rc_task_enter_section()
 {
     s_entered ++;
     s_last_tick = g_pt->global_tick;
 }
 
+/**
+ * Resume the switching 
+*/
 void rc_task_exit_section()
 {
     s_entered --;
     if(s_entered < 0) s_entered = 0;
 }
 
+/**
+ * Resume switching immediately
+*/
 void rc_task_clear_section()
 {
     s_entered = 0;
 }
 
+/**
+ * Trigger SWI manually
+*/
 void rc_task_interrupt()
 {
     g_pt->enter_critical();
@@ -126,6 +181,11 @@ void rc_task_interrupt()
     g_pt->task_interrupt();
 }
 
+/**
+ * Try to switch context,
+ * if current task has not been switched over one tick time,
+ * it will be switched off immediately.
+*/
 void rc_task_try_switch()
 {
     l_node_t *pn;
@@ -146,16 +206,27 @@ void rc_task_try_switch()
         pn = list_pop_head(&s_lst_ready);
         s_ptsk_running = list_node_container(rc_task_t, *pn);
 
-#if 0
-        if(s_ptsk_running->regs.regs[13] == 0x0) {
-
-            s_ptsk_running->regs.regs[13] = s_ptsk_running->stack_low;
-            s_ptsk_running->regs.regs[0] = (unsigned int)s_ptsk_running->para;
-        }
-#endif
-
         asm_task_save_switch(last->regs.regs, s_ptsk_running->regs.regs);
     }
+}
+
+/**
+ * Initialize task-manager foundation
+ * Don't call this funtion as user
+*/
+int rc_task_init()
+{
+    s_cur_stack_ptr = g_pt->stack_low;
+
+    s_lst_tasks.len = 0;
+    s_lst_ready.len = 0;
+    s_lst_blcked.len = 0;
+    s_lst_spded.len = 0;
+
+    s_entered = 0;
+
+    g_pt->arch_bind_systick(rc_task_sys_tick);
+    g_pt->arch_bind_swi(rc_task_swi);
 }
 
 static void rc_task_sys_tick()

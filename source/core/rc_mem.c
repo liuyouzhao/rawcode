@@ -1,10 +1,50 @@
+/********************************************************************************
+ * core/rc_mem.c
+ *
+ *   Copyright (C) 2016,2017 Frodo Liu. All rights reserved.
+ *   Author: Frodo Liu <liuyouzhao@hotmail.com>
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ * 3. Neither the name RawCode nor the names of its contributors may be
+ *    used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ ********************************************************************************/
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <utils/util.h>
 #include <port/port.h>
 
-/*
+/**
+This file is for memory management implementation.
+The main idea is based on Slag-Thunk algorithm.
+
+The following comments show how the structures like to buildup
+the mm logic.
 
 cache:       slab_link&chunk_link:
 |---------|  
@@ -15,9 +55,14 @@ cache:       slab_link&chunk_link:
 | ....... |  
 | n       |  
 -----------
+*/
 
-global heap top
-[top]                                         [low]
+/**
+rc_mm_heap_t
+In global heap, here descripts memory space from top to low.
+ptr_stack_heap_left begins from left side as ptr_stack_heap_right from right.
+
+[heap top]                              [heap low]
 --------------------------------------------------
 |management data|                    | user data |
 --------------------------------------------------
@@ -178,6 +223,14 @@ void rc_free(void *p)
     rc_task_try_switch();
 }
 
+/**
+ * return how many heap left
+*/
+unsigned int rc_heap_left()
+{
+    return s_heap.ptr_stack_heap_right - s_heap.ptr_stack_heap_left;
+}
+
 void rc_dump_cache()
 {
     int i, j;
@@ -187,7 +240,6 @@ void rc_dump_cache()
 
     g_pt->enter_critical();
 
-    printf("-----CACHE-----\n");
     for( i = 0; i < s_slab_nmax; i ++ ) {
         printf("[%d BYTES SLABS]", i * s_slab_unit);
 
@@ -215,14 +267,6 @@ void rc_dump_cache()
         }
     }
     g_pt->exit_critical();
-}
-
-/**
- * return how many heap left
-*/
-unsigned int rc_heap_left()
-{
-    return s_heap.ptr_stack_heap_right - s_heap.ptr_stack_heap_left;
 }
 
 static void *_malloc(size_t size)
