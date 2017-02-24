@@ -91,6 +91,8 @@ static rc_mm_chunk_t* init_chunks(unsigned int chunk_size);
 static void * frm_right_valid_next(unsigned int size);
 static void * frm_left_valid_next(unsigned int size);
 static void dump_cache();
+static void *_malloc(size_t size);
+static void _free(void *p);
 void *rc_malloc(size_t size);
 
 /**
@@ -148,6 +150,83 @@ void rc_memcpy(void* dst, void *src, unsigned int len)
 
 void *rc_malloc(size_t size)
 {
+    void *ptr = 0;
+    rc_task_enter_section();
+    ptr = _malloc(size);
+    rc_task_try_switch();
+    return ptr;
+}
+
+void *rc_kmalloc(size_t size)
+{
+    void *ptr = 0;
+    ptr = _malloc(size);
+    return ptr;
+}
+
+void *rc_calloc(size_t size)
+{
+    void *p = rc_malloc(size);
+    rc_memset(p, 0, size);
+    return p;
+}
+
+void rc_free(void *p)
+{
+    rc_task_enter_section();
+    _free(p);
+    rc_task_try_switch();
+}
+
+void rc_dump_cache()
+{
+    int i, j;
+    void *pp;
+    rc_mm_slab_t *ps;
+    rc_mm_chunk_t *pc;
+
+    g_pt->enter_critical();
+
+    printf("-----CACHE-----\n");
+    for( i = 0; i < s_slab_nmax; i ++ ) {
+        printf("[%d BYTES SLABS]", i * s_slab_unit);
+
+        ps = &(s_cache.arr_slabs[i]);
+        if(ps == NULL) {
+            __DEBUG_ERR__("Error, here slab is NULL");
+        }
+
+        printf("\n");
+        while(ps) {
+            printf("-----slab-%d [%p]--------\n", ps->id, ps);
+
+            pc = ps->chunk_head;
+            while(pc) {
+                if(pc->data != NULL)
+                    pp = *(rc_mm_chunk_t**)*(int*)(pc->data - sizeof(unsigned int));
+                else
+                    pp = NULL;
+                printf("-----------chunk(%p:[%d] %d %x %p) \n",
+                        pc, pc->id, pc->occupied, pc->data, pp);
+                pc = pc->next;
+            }
+            printf("\n");
+            ps = ps->next;
+        }
+    }
+    g_pt->exit_critical();
+}
+
+/**
+ * return how many heap left
+*/
+unsigned int rc_heap_left()
+{
+    return s_heap.ptr_stack_heap_right - s_heap.ptr_stack_heap_left;
+}
+
+static void *_malloc(size_t size)
+{
     int i;
     rc_mm_slab_t *p_slab;
     rc_mm_chunk_t *p_chunk;
@@ -157,9 +236,6 @@ void *rc_malloc(size_t size)
     while(index * s_slab_unit < size) {
         index ++;
     }
-
-    g_pt->enter_critical();
-
 
     p_slab = &(s_cache.arr_slabs[index]);
 
@@ -194,19 +270,10 @@ void *rc_malloc(size_t size)
         }
         p_slab = p_slab->next;
     }
-
-    g_pt->exit_critical();
     return 0;
 }
 
-void *rc_calloc(size_t size)
-{
-    void *p = rc_malloc(size);
-    rc_memset(p, 0, size);
-    return p;
-}
-
-void rc_free(void *p)
+static void _free(void *p)
 {
     unsigned int *chunk_head_addr = (unsigned int*)(p - sizeof(unsigned int));
     rc_mm_chunk_t **pp_chunk = (rc_mm_chunk_t**)(*chunk_head_addr);
@@ -222,53 +289,6 @@ void rc_free(void *p)
     }
     chunk->occupied = 0;
     slab->alloced --;
-}
-
-void rc_dump_cache()
-{
-    int i, j;
-    void *pp;
-    rc_mm_slab_t *ps;
-    rc_mm_chunk_t *pc;
-
-    g_pt->enter_critical();
-
-    printf("-----CACHE-----\n");
-    for( i = 0; i < s_slab_nmax; i ++ ) {
-        printf("[%d BYTES SLABS]", i * s_slab_unit);
-
-        ps = &(s_cache.arr_slabs[i]);
-        if(ps == NULL) {
-            __DEBUG_ERR__("Error, here slab is NULL");
-        }
-
-        printf("\n");
-        while(ps) {
-            printf("-----slab-%d [%p]--------\n", ps->id, ps);
-
-            pc = ps->chunk_head;
-            while(pc) {
-                if(pc->data != NULL)
-                    pp = *(rc_mm_chunk_t**)*(int*)(pc->data - sizeof(unsigned int));
-                else
-                    pp = NULL;
-                printf("-----------chunk(%p:[%d] %d %x %p) \n", 
-                        pc, pc->id, pc->occupied, pc->data, pp);
-                pc = pc->next;
-            }
-            printf("\n");
-            ps = ps->next;
-        }
-    }
-    g_pt->exit_critical();
-}
-
-/**
- * return how many heap left
-*/
-unsigned int rc_heap_left()
-{
-    return s_heap.ptr_stack_heap_right - s_heap.ptr_stack_heap_left;
 }
 
 static int heap_fatal(unsigned int size)

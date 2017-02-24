@@ -46,7 +46,7 @@ typedef struct port_s
     void (*exit_critical)();
 
     /* task functions */
-    void (*task_registers_init)(void *regs, void *entry);
+    void (*task_registers_init)(void *regs, void *entry, void *para, unsigned int stack_low);
     void (*task_switch)(void *regs, void *last_regs, 
                         unsigned int stack_low, unsigned int stack_size,
                         void *para);

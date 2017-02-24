@@ -105,7 +105,7 @@ void dbg_printf_ext(const char* text, ...)
     }
     va_end(ap);
 
-    rc_task_try_swicth();
+    rc_task_try_switch();
 }
 
 void dbg_printf_ext_kernel(const char* text, ...)

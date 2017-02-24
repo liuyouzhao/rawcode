@@ -78,7 +78,7 @@ int rc_task_create(const char* name, void (*pfunc) (void* para),
         return -1;
     }
 
-    tsk = (rc_task_t*) rc_malloc(sizeof(rc_task_t));
+    tsk = (rc_task_t*) rc_kmalloc(sizeof(rc_task_t));
 
     if(tsk == NULL) {
         __DEBUG_ERR__("memory is not enough");
@@ -92,7 +92,7 @@ int rc_task_create(const char* name, void (*pfunc) (void* para),
     tsk->stack_size = stacksize;
     tsk->entry = pfunc;
 
-    g_pt->task_registers_init(&(tsk->regs), tsk->entry);
+    g_pt->task_registers_init(&(tsk->regs), tsk->entry, tsk->para, tsk->stack_low);
     put_to_ready_list(tsk);
 
     s_cur_stack_ptr -= stacksize;
@@ -126,7 +126,7 @@ void rc_task_interrupt()
     g_pt->task_interrupt();
 }
 
-void rc_task_try_swicth()
+void rc_task_try_switch()
 {
     l_node_t *pn;
     rc_task_t *last;
@@ -146,13 +146,14 @@ void rc_task_try_swicth()
         pn = list_pop_head(&s_lst_ready);
         s_ptsk_running = list_node_container(rc_task_t, *pn);
 
-        kprintf("swt---> %p %p\n", s_ptsk_running, last);
-
+#if 0
         if(s_ptsk_running->regs.regs[13] == 0x0) {
 
             s_ptsk_running->regs.regs[13] = s_ptsk_running->stack_low;
             s_ptsk_running->regs.regs[0] = (unsigned int)s_ptsk_running->para;
         }
+#endif
+
         asm_task_save_switch(last->regs.regs, s_ptsk_running->regs.regs);
     }
 }
