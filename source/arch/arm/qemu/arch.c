@@ -44,14 +44,18 @@ static void _arch_enter_critical()
 {
     asm_close_irq();
     g_pt->critical_nesting ++;
+    __KDEBUG__
 }
 
 static void _arch_exit_critical()
 {
     if( g_pt->critical_nesting == 0 ) {
         asm_open_irq();
+        __KDEBUG__
     }
-    g_pt->critical_nesting --;
+    else {
+        g_pt->critical_nesting --;
+    }
 }
 
 static void _arch_task_registers_init(void *registers, void *entry, void *para, unsigned int stack_low)

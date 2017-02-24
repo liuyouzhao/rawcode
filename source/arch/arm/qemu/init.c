@@ -19,7 +19,7 @@ void task1(void* para)
         i ++;
         printf("task1:%d  %s  sp: %p a: %p %p %p\n", i, a, asm_get_sp(), &a, &i, &j);
 
-
+#if 0
         float y, x, a;
 	    for (y = 1.5f;y > -1.5f;y -= 0.1f)
 	    {
@@ -30,7 +30,7 @@ void task1(void* para)
 		    }
 		    printf("\n");
 	    }
-
+#endif
 #if 1
         size = ((i + 1) % 10) * 128;
         ptr = (char*) rc_malloc(size);
@@ -53,7 +53,7 @@ void task2(void* para)
     while(1) {
         i ++;
         printf("task2:%d  %p\n", i, asm_get_sp());
-
+#if 0
         float y, x, z,f;
         const char *c = ".:-=+*#%@";
 	    for (y = 1.5f;y > -1.5f;y -= 0.1f)
@@ -66,6 +66,7 @@ void task2(void* para)
 		    }
 		    printf("\n");
 	    }
+#endif
 #if 1
         size = ((i + 1) % 10) * 128;
         ptr = (char*) rc_malloc(size);
@@ -75,6 +76,38 @@ void task2(void* para)
     }
 }
 
+void task3(void* para)
+{
+    int i = 0;
+    int j = 0;
+    char *ptr = 0;
+    int size = 0;
+
+    while(1) {
+        i ++;
+        printf("task3:%d  %p\n", i, asm_get_sp());
+#if 0
+        float y, x, z,f;
+        const char *c = "0000000000";
+	    for (y = 1.5f;y > -1.5f;y -= 0.1f)
+	    {
+		    for (x = -1.5f;x < 1.5f;x += 0.05f)
+		    {
+			    z = x*x + y*y - 1;
+			    f = z*z*z - x*x*y*y*y;
+			    printf("%c", f <= 0.0f ? c[(int)(f*-8.0f)] : ' ');
+		    }
+		    printf("\n");
+	    }
+#endif
+#if 1
+        size = ((i + 1) % 10) * 128;
+        ptr = (char*) rc_malloc(size);
+        rc_memset(ptr, 0, size);
+        rc_free(ptr);
+#endif
+    }
+}
 
 int init()
 {
@@ -102,8 +135,8 @@ int init()
     rc_mm_init();
 
     ret = rc_task_create("task1", task1, 4096, 10, NULL);
-    __KDEBUG__
     ret |= rc_task_create("task2", task2, 4096, 10, NULL);
+    ret |= rc_task_create("task3", task3, 4096, 10, NULL);
 
     kprintf("finished init\n");
 
