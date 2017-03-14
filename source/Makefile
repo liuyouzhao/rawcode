@@ -14,33 +14,9 @@
  # limitations under the License.
 ##
 ####
-# Prefix platform
-PLATFORM=arm
-BUILD=build
 
-# Makefile main logic
-ROOT=$(shell pwd)
-PRE_ROOT=$(ROOT)/../
-CC    =$(ROOT)/../$(BUILD)/toolchain/$(PLATFORM)/bin/$(PLATFORM)-none-eabi-gcc
-AS    =$(ROOT)/../$(BUILD)/toolchain/$(PLATFORM)/bin/$(PLATFORM)-none-eabi-as
-LD    =$(ROOT)/../$(BUILD)/toolchain/$(PLATFORM)/bin/$(PLATFORM)-none-eabi-ld
-OC    =$(ROOT)/../$(BUILD)/toolchain/$(PLATFORM)/bin/$(PLATFORM)-none-eabi-objcopy
-LDIR  =$(ROOT)/../$(BUILD)/toolchain/$(PLATFORM)/$(PLATFORM)-none-eabi/lib
-LDIR2 =$(ROOT)/../$(BUILD)/toolchain/$(PLATFORM)/lib/gcc/$(PLATFORM)-none-eabi/4.9.3
-
-OUT_DIR=../out/$(PLATFORM)
-
-include filelist.mk
 include config.mk
-
-AFLAGS=-mcpu=$(CPU)
-CFLAGS=-mcpu=$(CPU)  \
-       -nostdlib -g \
-       $(C_CFLAGS)
-
-LDFLAGS = -L$(LDIR) \
-          -L$(LDIR2) \
-	  -lc -lgcc -lm 
+include filelist.mk
 
 
 C_OBJS =
@@ -55,16 +31,21 @@ $(foreach s, $(S_FILES), \
 	$(shell mkdir $(OUT_DIR)/$(s:%s=%dump) -p) \
 	$(shell $(AS) $(AFLAGS) $(s) -o $(OUT_DIR)/$(s:%s=%o)) \
 	$(eval S_OBJS += $(OUT_DIR)/$(s:%s=%o)) )
+LD_CMD =
+OC_CMD =
+ifeq ($(LD_LINKER), )
+else
 $(shell cp $(LD_LINKER) $(OUT_DIR)/$(LD_LINKER))
-
+LD_CMD = -T $(OUT_DIR)/$(LD_LINKER)
+OC_CMD = -O binary
+endif
 
 
 all: compile raw
 compile: $(C_OBJS)
 raw:
-	$(LD) -T $(OUT_DIR)/$(LD_LINKER) $(C_OBJS) $(S_OBJS) -o $(OUT_DIR)/output.elf $(LDFLAGS)
-	$(OC) -O binary $(OUT_DIR)/output.elf $(PRE_ROOT)/output.bin
-
+	$(LD) $(LD_CMD) $(C_OBJS) $(S_OBJS) -o $(OUT_DIR)/$(OUT_BIN).elf $(LDFLAGS)
+	$(OC) $(OC_CMD) $(OUT_DIR)/$(OUT_BIN).elf $(PRE_ROOT)/$(OUT_BIN)
 
 .PHONY: clean
 clean:
