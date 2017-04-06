@@ -21,6 +21,7 @@ OUT_BIN = output
 
 C_CFLAGS += -Iarch/$(PLATFORM)/$(BOARD)/include
 C_CFLAGS += -I./
+#C_CFLAGS += -I./ -Os
 
 AFLAGS=-mcpu=$(CPU)
 CFLAGS=-mcpu=$(CPU)  \

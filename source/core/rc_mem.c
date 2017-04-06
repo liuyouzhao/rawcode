@@ -211,8 +211,11 @@ void *rc_kmalloc(size_t size)
 
 void *rc_calloc(size_t size)
 {
-    void *p = rc_malloc(size);
+    void *p = 0;
+    rc_task_enter_section();
+    p = rc_malloc(size);
     rc_memset(p, 0, size);
+    rc_task_try_switch();
     return p;
 }
 
@@ -328,6 +331,7 @@ static void _free(void *p)
         chunk = chunk->next;
         if(chunk == NULL) {
             __DEBUG_ERR__("free wrong address");
+            kprintf("%p\n", p);
             g_pt->panic();
         }
     }

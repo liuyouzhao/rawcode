@@ -28,6 +28,6 @@ int rc_queue_recv()
     g_pt->exit_critical();
 }
 
-int rc_queue_send()
+int rc_queue_post()
 {
 }

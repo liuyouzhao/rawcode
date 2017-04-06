@@ -48,6 +48,12 @@
 #define KC_MEM_SLAB_NMAX                   512
 #define KC_MEM_PRESERVE_CHUNK              3
 
+/* timer */
+/* Max number timers, indeed the size that avoid to be too large.
+   Otherwise function "rc_timer_create" cannot warrant the instantaneity that in real-time.
+*/
+#define KC_TIMER_MAX_NUM                   64
+
 typedef struct arch_registers_s
 {
     unsigned int regs[18];

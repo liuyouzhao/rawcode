@@ -210,6 +210,29 @@ void rc_task_try_switch()
     }
 }
 
+unsigned int rc_task_suspend()
+{
+    l_node_t *pn;
+
+    g_pt->enter_critical();
+
+    list_add_tail(&s_lst_blcked, s_ptsk_running);
+    pn = list_pop_head(&s_lst_ready);
+
+    if(pn != NULL) {
+        s_ptsk_running = list_node_container(rc_task_t, *pn);
+        g_pt->task_switch(&(s_ptsk_running->regs), NULL,
+                        s_ptsk_running->stack_low, s_ptsk_running->stack_size,
+                        s_ptsk_running->para);
+    }
+    else {
+        __DEBUG_ERR__("No alive task left, sys will block forever");
+    }
+
+    g_pt->exit_critical();
+}
+
+
 /**
  * Initialize task-manager foundation
  * Don't call this funtion as user
@@ -275,7 +298,7 @@ static void task_tick_switch()
     pn = list_pop_head(&s_lst_ready);
     s_ptsk_running = list_node_container(rc_task_t, *pn);
 
-    g_pt->task_switch(&(s_ptsk_running->regs), last,
+    g_pt->task_switch(&(s_ptsk_running->regs), &(last->regs),
                         s_ptsk_running->stack_low, s_ptsk_running->stack_size,
                         s_ptsk_running->para);
 exit:

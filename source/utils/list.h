@@ -207,4 +207,36 @@ static inline l_node_t * __l_next(l_node_t **from)
     c.__L_NODE_NAME
 
 
+/*
+Usage&Utilities
+
+struct ur_stct_s
+{
+    ...
+    __L_NODE__
+} ur_stct_t;
+
+static list_t s_ur_lst;
+
+int main()
+{
+    int i = 0;
+    ur_stct_t *ptmp = 0;
+    for ( ; i < 100; i ++ )
+    {
+        ptmp = (ur_stct_t*) malloc(sizeof(ur_stct_t));
+        list_add_tail(&s_ur_lst, ptmp);
+    }
+    
+    ptmp = list_pop_head(&s_ur_lst);
+    while(ptmp)
+    {
+        free(ptmp);
+        ptmp = list_pop_head(&s_ur_lst);
+    }
+    
+}
+
+*/
+
 #endif /* __INCLUDE_LIST_H */

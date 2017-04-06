@@ -10,7 +10,8 @@
 unsigned char* glb_output_uart_addr = (unsigned char*) IC_UART0;
 static int s_closed_irq = 0;
 extern unsigned long timer_tick;
-
+void arch_tick_disable();
+void arch_tick_enable();
 /********************************
  * Register base functions
 #if 1
@@ -75,21 +76,29 @@ static void _arch_task_switch(void *regs, void *last_regs,
 {
     rc_registers_t *rgs = regs;
     rc_registers_t *lst_rgs = last_regs;
-    int i;
 
-    arch_tick_disable();
+    //arch_tick_disable();
+    _arch_enter_critical();
 
     if(lst_rgs) {
-        unsigned int *pr = (unsigned int*)(0x14000);
-
-        kprintf("save context \n");
         asm_task_save_context(lst_rgs->regs);
+    }
 
-        kprintf("\n");
+    //arch_tick_enable();
+    _arch_exit_critical();
+    asm_task_switch_context(rgs->regs);
+}
+
+static void _arch_task_save_registers(void *regs)
+{
+    rc_registers_t *rgs = regs;
+    arch_tick_disable();
+
+    if(rgs) {
+        asm_task_save_context(rgs->regs);
     }
 
     arch_tick_enable();
-    asm_task_switch_context(rgs->regs);
 }
 
 void _arch_task_enter_swi() {
@@ -113,10 +122,13 @@ static port_t s_arch_port =
     .stack_top = (unsigned char*) KC_TASK_STACK_TOP,
     .task_registers_init = _arch_task_registers_init,
     .task_switch = _arch_task_switch,
+    .task_save_registers = _arch_task_save_registers,
     .task_interrupt = _arch_task_enter_swi,
 
     .arch_bind_systick = arch_bind_systick,
     .arch_bind_swi = arch_bind_swi,
+    .arch_disable_timer = arch_tick_disable,
+    .arch_enable_timer = arch_tick_enable,
 
     /* Memory */
     .heap_low = (unsigned char*) KC_MEM_HEAP_LOW,
