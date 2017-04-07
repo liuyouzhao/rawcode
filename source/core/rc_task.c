@@ -104,6 +104,25 @@ static void rc_task_swi();
 */
 
 /**
+ * Initialize task-manager foundation
+ * Don't call this funtion as user
+*/
+int rc_task_init()
+{
+    s_cur_stack_ptr = g_pt->stack_low;
+
+    s_lst_tasks.len = 0;
+    s_lst_ready.len = 0;
+    s_lst_blcked.len = 0;
+    s_lst_spded.len = 0;
+
+    s_entered = 0;
+
+    g_pt->arch_bind_systick(rc_task_sys_tick);
+    g_pt->arch_bind_swi(rc_task_swi);
+}
+
+/**
  * Create new task
  * your task function will never end, otherwise it will cause problems
  * like for(;;) or while(1) available, for keeping coherent jumping logic.
@@ -180,98 +199,61 @@ void rc_task_interrupt()
     g_pt->task_interrupt();
 }
 
-/**
- * Try to switch context,
- * if current task has not been switched over one tick time,
- * it will be switched off immediately.
+/*
+ * get running task
 */
-void rc_task_try_switch()
+void *rc_task_running()
 {
-    l_node_t *pn;
-    rc_task_t *last;
-
-    if(s_last_tick < g_pt->global_tick) {
-        rc_task_clear_section();
-        
-        if(s_lst_ready.len == 0) {
-            return;
-        }
-
-        last = s_ptsk_running;
-        put_to_ready_list(s_ptsk_running);
-
-        pn = list_pop_head(&s_lst_ready);
-        s_ptsk_running = list_node_container(rc_task_t, *pn);
-
-        asm_task_save_switch(last->regs.regs, s_ptsk_running->regs.regs);
-    }
+    return s_ptsk_running;
 }
 
-unsigned int rc_task_suspend()
+/**
+ * Move current runing task into blocked list
+                     | Blocked List |
+                     |     tsk1     |
+                     |     tsk2     |
+  s_ptsk_running --> |     ...      |
+
+                     | Ready List   |
+  s_ptsk_running <-- |     tsk3     |
+                     |     tsk4     |
+                     |     ...      |
+*/
+void rc_task_suspend()
 {
-    l_node_t *pn;
+    l_node_t *pn = 0;
 
     g_pt->enter_critical();
 
     list_add_tail(&s_lst_blcked, s_ptsk_running);
-    pn = list_pop_head(&s_lst_ready);
 
-    if(pn != NULL) {
-        s_ptsk_running = list_node_container(rc_task_t, *pn);
-        g_pt->task_switch(&(s_ptsk_running->regs), NULL,
-                        s_ptsk_running->stack_low, s_ptsk_running->stack_size,
-                        s_ptsk_running->para);
-    }
-    else {
+    if(s_lst_ready.len == 0) {
         __DEBUG_ERR__("No alive task left, sys will block forever");
+        s_ptsk_running = NULL;
+        goto exit;
     }
 
+    pn = list_pop_head(&s_lst_ready);
+    s_ptsk_running = list_node_container(rc_task_t, *pn);
+exit:
     g_pt->exit_critical();
 }
 
-
 /**
- * Initialize task-manager foundation
- * Don't call this funtion as user
+ * Switch running task
+                     | Ready List |
+  s_ptsk_running <-- |     tsk1     |
+                     |     tsk2     |
+                     |     ...      |
+                     |              |
+                     |     tsk8     |
+                     |     tsk9     |
+  s_ptsk_running --> |     ...      |
 */
-int rc_task_init()
-{
-    s_cur_stack_ptr = g_pt->stack_low;
-
-    s_lst_tasks.len = 0;
-    s_lst_ready.len = 0;
-    s_lst_blcked.len = 0;
-    s_lst_spded.len = 0;
-
-    s_entered = 0;
-
-    g_pt->arch_bind_systick(rc_task_sys_tick);
-    g_pt->arch_bind_swi(rc_task_swi);
-}
-
-static void rc_task_sys_tick()
-{
-    kprintf("tick->%d\n", s_entered);
-    if(s_entered > 0) {
-        return;
-    }
-    task_tick_switch();
-}
-
-static void rc_task_swi()
-{
-    if(s_entered) {
-        return;
-    }
-    task_tick_switch();
-}
-
-static void task_tick_switch()
+void rc_task_switch()
 {
     l_node_t *pn;
     rc_task_t *last;
-
-    //g_pt->enter_critical();
 
     if(s_lst_ready.len == 0) {
         if(s_ptsk_running != NULL) {
@@ -301,7 +283,28 @@ static void task_tick_switch()
                         s_ptsk_running->para);
 exit:
     return;
-    //g_pt->exit_critical();
+}
+
+static void rc_task_sys_tick()
+{
+    kprintf("tick->%d\n", s_entered);
+    if(s_entered > 0) {
+        return;
+    }
+    task_tick_switch();
+}
+
+static void rc_task_swi()
+{
+    if(s_entered) {
+        return;
+    }
+    task_tick_switch();
+}
+
+static void task_tick_switch()
+{
+    rc_task_switch();
 }
 
 static void put_to_ready_list(rc_task_t *tsk)

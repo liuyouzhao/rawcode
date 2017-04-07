@@ -28,7 +28,7 @@ C_ARCH_FILES = \
 
 C_CORE_FILES = core/rc_mem.c \
                core/rc_task.c \
-               core/rc_queue.c \
+               core/rc_signal.c \
                core/rc_timer.c
 
 C_TEST_FILES = test/test_mem.c

@@ -48,6 +48,10 @@
 #define KC_MEM_SLAB_NMAX                   512
 #define KC_MEM_PRESERVE_CHUNK              3
 
+/* signal */
+#define KC_SIGNAL_OFFSET                   1
+#define KC_SIGNAL_MAX                      32
+
 /* timer */
 /* Max number timers, indeed the size that avoid to be too large.
    Otherwise function "rc_timer_create" cannot warrant the instantaneity that in real-time.
