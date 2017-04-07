@@ -70,7 +70,8 @@ void dbg_printf_ext(const char* text, ...)
         return;
     }
 
-    rc_task_enter_section();
+    //rc_task_enter_section();
+    g_pt->enter_critical();
 
     va_list ap;
     va_start(ap, text);  
@@ -104,8 +105,9 @@ void dbg_printf_ext(const char* text, ...)
         tmp ++;
     }
     va_end(ap);
-
-    rc_task_try_switch();
+    //rc_task_exit_section();
+    //rc_task_try_switch();
+    g_pt->exit_critical();
 }
 
 void dbg_printf_ext_kernel(const char* text, ...)

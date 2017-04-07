@@ -1,6 +1,7 @@
 #include <arch.h>
 #include <irq.h>
 #include <utils/util.h>
+#include <port/port.h>
 
 static void none() {}
 extern void arch_tick_done();
@@ -28,10 +29,13 @@ void arch_bind_systick(void (*systick)())
     s_irq_vecs.sys_tick = systick;
 }
 
+extern unsigned int g_registers_asm[18];
 void irq()
 {
     int n = 0;
     int irq_stats = getreg32(IC_VIC_BASE);
+
+    kprintf("irq:%d %d %d\n", g_registers_asm[0], g_registers_asm[1], g_registers_asm[2]);
 
     void (*vec)();
     void (*ack)();

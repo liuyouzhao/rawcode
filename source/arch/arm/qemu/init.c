@@ -57,10 +57,10 @@ void task1(void* para)
 		    printf("\n");
 	    }
 #endif
-#if 0
+#if 1
         size = ((i + 1) % 10) * 128;
         ptr = (char*) rc_malloc(size);
-        //rc_memset(ptr, 0, size);
+        rc_memset(ptr, 0, size);
         //printf("t1(%p)\n", ptr);
         printf("t1--(%p)\n", ptr);
         rc_free(ptr);
@@ -73,8 +73,9 @@ void task1(void* para)
 #endif
         //for(j = 0; j < 1000000; j ++);
         //printf("task1[%d] \n", i ++);
+        printf("t1:--%d\n", i);
         func1(&j);
-        printf("%d\n", j);
+        printf("t1:%d\n", j);
     }
 }
     
@@ -87,6 +88,7 @@ void task2(void* para)
     int size = 0;
     float y, x, z,f;
     const char *c = ".:-=+*#%@";
+    printf("task2=====start\n");
     while(1) {
         i ++;
         //printf("task2:%d  %p\n", i, asm_get_sp());
@@ -103,7 +105,7 @@ void task2(void* para)
 		    printf("\n");
 	    }
 #endif
-#if 0
+#if 1
         size = ((i + 1) % 10) * 128;
         ptr = (char*) rc_malloc(size);
         //rc_memset(ptr, 0, size);
@@ -115,8 +117,9 @@ void task2(void* para)
             i = 0;
         }
 #endif
+        printf("t2:-- %d\n", i);
         func1(&j);
-        printf("%d\n", j);
+        printf("t2:%d\n", j);
     }
 }
 
@@ -146,14 +149,17 @@ void task3(void* para)
 #if 1
         size = ((i + 1) % 10) * 128;
         ptr = (char*) rc_malloc(size);
-        //rc_memset(ptr, 0, size);
-        //printf("t3(%p)\n", ptr);
+        rc_memset(ptr, 0, size);
+        printf("t3(%p)\n", ptr);
         rc_free(ptr);
         if(i > 1000) {
             printf("t3\n");
             i = 0;
         }
 #endif
+        printf("t3:-- %d\n", i);
+        func1(&j);
+        printf("t3:%d\n", j);
     }
 }
 
@@ -177,14 +183,17 @@ int init()
      */
     //asm_mpu_config();
 
-
     arch_init();
     rc_task_init();
     rc_mm_init();
 
+    asm_close_irq();
+
     ret = rc_task_create("task1", task1, 4096, 10, NULL);
     ret |= rc_task_create("task2", task2, 4096, 10, NULL);
-    //ret |= rc_task_create("task3", task3, 4096, 10, NULL);
+    ret |= rc_task_create("task3", task3, 4096, 10, NULL);
+
+    asm_open_irq();
 
     kprintf("finished init\n");
 

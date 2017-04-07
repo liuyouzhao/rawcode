@@ -196,9 +196,9 @@ void rc_memcpy(void* dst, void *src, unsigned int len)
 void *rc_malloc(size_t size)
 {
     void *ptr = 0;
-    rc_task_enter_section();
+    g_pt->enter_critical();
     ptr = _malloc(size);
-    rc_task_try_switch();
+    g_pt->exit_critical();
     return ptr;
 }
 
@@ -212,18 +212,16 @@ void *rc_kmalloc(size_t size)
 void *rc_calloc(size_t size)
 {
     void *p = 0;
-    rc_task_enter_section();
     p = rc_malloc(size);
     rc_memset(p, 0, size);
-    rc_task_try_switch();
     return p;
 }
 
 void rc_free(void *p)
 {
-    rc_task_enter_section();
+    g_pt->enter_critical();
     _free(p);
-    rc_task_try_switch();
+    g_pt->exit_critical();
 }
 
 /**
@@ -304,8 +302,6 @@ static void *_malloc(size_t size)
 
             p_chunk->occupied = 1;
             p_slab->alloced ++;
-
-            g_pt->exit_critical();
 
             return p_chunk->data;
         }

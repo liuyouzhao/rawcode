@@ -135,13 +135,12 @@ int rc_task_create(const char* name, void (*pfunc) (void* para),
     tsk->stack_size = stacksize;
     tsk->entry = pfunc;
 
+    kprintf("tsk->entry: %p\n", tsk->entry);
     g_pt->task_registers_init(&(tsk->regs), tsk->entry, tsk->para, tsk->stack_low);
     put_to_ready_list(tsk);
 
     s_cur_stack_ptr -= stacksize;
-
     g_pt->exit_critical();
-
     return 0;
 }
 
@@ -192,11 +191,9 @@ void rc_task_try_switch()
     rc_task_t *last;
 
     if(s_last_tick < g_pt->global_tick) {
-        g_pt->enter_critical();
         rc_task_clear_section();
         
         if(s_lst_ready.len == 0) {
-            g_pt->exit_critical();
             return;
         }
 
@@ -254,7 +251,8 @@ int rc_task_init()
 
 static void rc_task_sys_tick()
 {
-    if(s_entered) {
+    kprintf("tick->%d\n", s_entered);
+    if(s_entered > 0) {
         return;
     }
     task_tick_switch();
@@ -273,11 +271,11 @@ static void task_tick_switch()
     l_node_t *pn;
     rc_task_t *last;
 
-    g_pt->enter_critical();
+    //g_pt->enter_critical();
 
     if(s_lst_ready.len == 0) {
         if(s_ptsk_running != NULL) {
-             g_pt->task_switch(&(s_ptsk_running->regs), NULL,
+             g_pt->task_switch(&(s_ptsk_running->regs), &(s_ptsk_running->regs),
                             s_ptsk_running->stack_low, s_ptsk_running->stack_size,
                             s_ptsk_running->para);
         }
@@ -302,7 +300,8 @@ static void task_tick_switch()
                         s_ptsk_running->stack_low, s_ptsk_running->stack_size,
                         s_ptsk_running->para);
 exit:
-    g_pt->exit_critical();
+    return;
+    //g_pt->exit_critical();
 }
 
 static void put_to_ready_list(rc_task_t *tsk)

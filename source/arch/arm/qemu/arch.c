@@ -7,6 +7,9 @@
 /************************************
 * Global address pointers definition
 *************************************/
+
+unsigned int g_registers_asm[18];
+
 unsigned char* glb_output_uart_addr = (unsigned char*) IC_UART0;
 static int s_closed_irq = 0;
 extern unsigned long timer_tick;
@@ -45,18 +48,16 @@ static void _arch_enter_critical()
 {
     asm_close_irq();
     g_pt->critical_nesting ++;
-    __KDEBUG__
+    //__KDEBUG__
 }
 
 static void _arch_exit_critical()
 {
+    g_pt->critical_nesting --;
     if( g_pt->critical_nesting == 0 ) {
         asm_open_irq();
-        __KDEBUG__
     }
-    else {
-        g_pt->critical_nesting --;
-    }
+    //__KDEBUG__
 }
 
 static void _arch_task_registers_init(void *registers, void *entry, void *para, unsigned int stack_low)
@@ -67,7 +68,7 @@ static void _arch_task_registers_init(void *registers, void *entry, void *para, 
 
     ((rc_registers_t*)registers)->regs[0] = (unsigned int) para;
     ((rc_registers_t*)registers)->regs[13] = stack_low;
-    ((rc_registers_t*)registers)->regs[14] = (unsigned int) entry;
+    //((rc_registers_t*)registers)->regs[14] = (unsigned int) entry;
     ((rc_registers_t*)registers)->regs[15] = (unsigned int) entry;
 }
 
@@ -77,15 +78,18 @@ static void _arch_task_switch(void *regs, void *last_regs,
     rc_registers_t *rgs = regs;
     rc_registers_t *lst_rgs = last_regs;
 
-    //arch_tick_disable();
-    _arch_enter_critical();
+    int i = 0;
+    kprintf("\n");
+    for( ; i < 18; i ++)
+    {
+        kprintf("R%d:%x ", i, g_registers_asm[i]);
+    }
+    kprintf("\n");
 
     if(lst_rgs) {
-        asm_task_save_context(lst_rgs->regs);
+        rc_memcpy(lst_rgs->regs, g_registers_asm, sizeof(int) * 18);
     }
 
-    //arch_tick_enable();
-    _arch_exit_critical();
     asm_task_switch_context(rgs->regs);
 }
 
@@ -95,7 +99,8 @@ static void _arch_task_save_registers(void *regs)
     arch_tick_disable();
 
     if(rgs) {
-        asm_task_save_context(rgs->regs);
+        rc_memcpy(rgs->regs, g_registers_asm, sizeof(int) * 18);
+        //asm_task_save_context(rgs->regs);
     }
 
     arch_tick_enable();
