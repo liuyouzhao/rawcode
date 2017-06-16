@@ -44,6 +44,8 @@ void task1(void* para)
     float y, x, a;
     while(1) {
         i ++;
+
+        if(i > 99999) i = 0;
         //printf("task1:%d  sp: %p a: %p %p %p\n", i, asm_get_sp(), &a, &i, &j);
 
 #if 0
@@ -57,7 +59,7 @@ void task1(void* para)
 		    printf("\n");
 	    }
 #endif
-#if 1
+#if 0
         size = ((i + 1) % 10) * 128;
         ptr = (char*) rc_malloc(size);
         rc_memset(ptr, 0, size);
@@ -91,6 +93,8 @@ void task2(void* para)
     printf("task2=====start\n");
     while(1) {
         i ++;
+
+        if(i > 99999) i = 0;
         //printf("task2:%d  %p\n", i, asm_get_sp());
 #if 0
         
@@ -105,7 +109,7 @@ void task2(void* para)
 		    printf("\n");
 	    }
 #endif
-#if 1
+#if 0
         size = ((i + 1) % 10) * 128;
         ptr = (char*) rc_malloc(size);
         //rc_memset(ptr, 0, size);
@@ -133,6 +137,8 @@ void task3(void* para)
     const char *c = "0000000000";
     while(1) {
         i ++;
+
+        if(i > 99999) i = 0;
         //printf("task3:%d  %p\n", i, asm_get_sp());
 #if 0
 	    for (y = 1.5f;y > -1.5f;y -= 0.1f)
@@ -146,7 +152,7 @@ void task3(void* para)
 		    printf("\n");
 	    }
 #endif
-#if 1
+#if 0
         size = ((i + 1) % 10) * 128;
         ptr = (char*) rc_malloc(size);
         rc_memset(ptr, 0, size);
@@ -191,7 +197,7 @@ int init()
 
     ret = rc_task_create("task1", task1, 4096, 10, NULL);
     ret |= rc_task_create("task2", task2, 4096, 10, NULL);
-    ret |= rc_task_create("task3", task3, 4096, 10, NULL);
+    //ret |= rc_task_create("task3", task3, 4096, 10, NULL);
 
     asm_open_irq();
 

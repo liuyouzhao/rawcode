@@ -42,6 +42,7 @@
 ********************************/
 extern unsigned char* glb_output_uart_addr;
 void dbg_printf_ext(const char* text, ...);
+void dbg_printf_ext_kernel(const char* text, ...);
 void dbg_printf(const char* text);
 void dbg_dump_stack();
 

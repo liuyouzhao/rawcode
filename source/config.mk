@@ -13,7 +13,7 @@ AS    =$(ROOT)/../$(BUILD)/toolchain/$(PLATFORM)/bin/$(PLATFORM)-none-eabi-as
 LD    =$(ROOT)/../$(BUILD)/toolchain/$(PLATFORM)/bin/$(PLATFORM)-none-eabi-ld
 OC    =$(ROOT)/../$(BUILD)/toolchain/$(PLATFORM)/bin/$(PLATFORM)-none-eabi-objcopy
 LDIR  =$(ROOT)/../$(BUILD)/toolchain/$(PLATFORM)/$(PLATFORM)-none-eabi/lib
-LDIR2 =$(ROOT)/../$(BUILD)/toolchain/$(PLATFORM)/lib/gcc/$(PLATFORM)-none-eabi/4.9.3
+LDIR2 =$(ROOT)/../$(BUILD)/toolchain/$(PLATFORM)/lib/gcc/$(PLATFORM)-none-eabi/6.3.1
 
 OUT_DIR=../out/$(PLATFORM)
 OUT_BIN = output

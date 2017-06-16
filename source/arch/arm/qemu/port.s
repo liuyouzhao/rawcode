@@ -22,14 +22,21 @@ asm_task_switch_context:
     LDR     r10, [r0, #4*10] @; Restore r10
     LDR     r11, [r0, #4*11] @; Restore r11
     LDR     r12, [r0, #4*12] @; Restore r12
-    LDR     sp,  [r0, #4*13]  @; Save sp to sp
-    LDR     lr,  [r0, #4*14]  @; Save lr to pc
+    LDR     sp,  [r0, #4*13]  @; Restore sp
+    LDR     lr,  [r0, #4*14]  @; Restore lr
 
     @; Restore cpsr
     PUSH    {r5}
     LDR     r5,  [r0, #4*16]  @; Save cpsr
     MSR     cpsr, r5
     POP     {r5}
+
+    /* reset tick */
+    PUSH    {r5, r6}
+    MOV     r5, #0x1
+    LDR     r6, IC_TIMER0
+    STR     r5, [r6, #4*3]
+    POP     {r5, r6}
 
     /* open IRQ */
     PUSH    {r5}
@@ -45,7 +52,7 @@ asm_task_switch_context:
     POP     {r5}
     LDR     pc, __SAVE_P0
 __SAVE_P0: .word g_registers_asm
-
+IC_TIMER0: .word 0x101e2000
 
 
 .global asm_get_sp

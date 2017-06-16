@@ -80,7 +80,7 @@ static list_t s_lst_blcked;
 static list_t s_lst_spded;
 
 /* Runing task */
-static rc_task_t *s_ptsk_running;
+static rc_task_t *s_ptsk_running = 0;
 
 /* stack address the next new thread begin from as its stack_low */
 static unsigned char *s_cur_stack_ptr;
@@ -90,6 +90,9 @@ static int s_entered;
 
 /* last tick number */
 static unsigned long s_last_tick = 0;
+
+static rc_task_t *s_ptsk1 = 0;
+static rc_task_t *s_ptsk2 = 0;
 
 /**
  * inner static functions
@@ -157,7 +160,6 @@ int rc_task_create(const char* name, void (*pfunc) (void* para),
     kprintf("tsk->entry: %p\n", tsk->entry);
     g_pt->task_registers_init(&(tsk->regs), tsk->entry, tsk->para, tsk->stack_low);
     put_to_ready_list(tsk);
-
     s_cur_stack_ptr -= stacksize;
     g_pt->exit_critical();
     return 0;
@@ -252,6 +254,7 @@ exit:
 */
 void rc_task_switch()
 {
+#if 0
     l_node_t *pn;
     rc_task_t *last;
 
@@ -283,11 +286,25 @@ void rc_task_switch()
                         s_ptsk_running->para);
 exit:
     return;
+#endif
+    rc_task_t *last;
+    if(s_ptsk_running == NULL) {
+        s_ptsk_running = s_ptsk1;
+        g_pt->task_switch(&(s_ptsk_running->regs), NULL,
+                            s_ptsk_running->stack_low, s_ptsk_running->stack_size,
+                            s_ptsk_running->para);
+        return;
+    }
+    last = s_ptsk_running;
+    s_ptsk_running = s_ptsk_running == s_ptsk1 ? s_ptsk2 : s_ptsk1;
+    g_pt->task_switch(&(s_ptsk_running->regs), &(last->regs),
+                    s_ptsk_running->stack_low, s_ptsk_running->stack_size,
+                    s_ptsk_running->para);
 }
 
 static void rc_task_sys_tick()
 {
-    kprintf("tick->%d\n", s_entered);
+    kprintf("tick->%d\n", g_pt->global_tick);
     if(s_entered > 0) {
         return;
     }
@@ -309,6 +326,7 @@ static void task_tick_switch()
 
 static void put_to_ready_list(rc_task_t *tsk)
 {
+#if 0
     l_node_t *p = s_lst_ready.p_head;
     rc_task_t *cur_tsk = NULL;
     while(p)
@@ -331,5 +349,10 @@ static void put_to_ready_list(rc_task_t *tsk)
         }
 
     }
+#endif
+    if(s_ptsk1 == 0)
+        s_ptsk1 = tsk;
+    else if(s_ptsk2 == 0)
+        s_ptsk2 = tsk;
 }
 

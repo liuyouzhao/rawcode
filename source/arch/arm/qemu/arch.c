@@ -79,17 +79,43 @@ static void _arch_task_switch(void *regs, void *last_regs,
     rc_registers_t *lst_rgs = last_regs;
 
     int i = 0;
+    int *sp = 0;
+
+    arch_tick_done();
+    arch_tick_disable();
+#if 1
     kprintf("\n");
     for( ; i < 18; i ++)
     {
         kprintf("R%d:%x ", i, g_registers_asm[i]);
     }
+    sp = g_registers_asm[13];
+    for(i = 0; i < 6; i ++)
+    {
+        kprintf("%x|", *(sp + i));
+    }
     kprintf("\n");
-
+#endif
     if(lst_rgs) {
         rc_memcpy(lst_rgs->regs, g_registers_asm, sizeof(int) * 18);
     }
 
+#if 1
+    sp = rgs->regs[13];
+    for(i = 0; i < 6; i ++)
+    {
+        kprintf("%x|", *(sp + i));
+    }
+    kprintf("\n");
+    kprintf("\n");
+    for(i = 0; i < 18; i ++)
+    {
+        kprintf("->r%d:%x ", i, rgs->regs[i]);
+    }
+    kprintf("\n");
+#endif
+    arch_tick_enable();
+    arch_tick_done();
     asm_task_switch_context(rgs->regs);
 }
 

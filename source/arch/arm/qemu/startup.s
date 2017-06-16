@@ -241,9 +241,11 @@ __not_used:
 /*    ldr r0,[lr,#-4]*/
 /*    mov r1,sp */
 __irq:
+    @; Reset sp address
+    LDR sp, =isr_stack_top
+
     SUB       lr, lr, #4       @; modify LR
 
-    PUSH      {sp}
     PUSH      {r12}     @; store AAPCS registers on to the IRQ mode stack
     LDR       r12, =g_registers_asm
     STMIA     r12!, {r0-r11}

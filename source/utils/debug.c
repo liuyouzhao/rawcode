@@ -27,13 +27,16 @@ static void dbg_printnum10(int num)
     char arr[12] = {0};
     char* p = arr + 11;
     
-    while(i > 0) {
+    int count = 0;
+
+    while(i != 0 && (count ++) < 512) {
         arr[d] = (i % 10) + 48;
         d ++;
         i = i / 10;
     }
 
-    while(*p == 0) {
+    count = 0;
+    while(*p == 0 && (count ++) < 512) {
         p --;
     }
 
@@ -49,8 +52,9 @@ static void dbg_printnum10(int num)
 
 void dbg_printf(const char* text)
 {
+    int count = 0;
     char* tmp = (char*) text;
-    while((*tmp) != '\0')
+    while((*tmp) != '\0' && (count ++ ) < 256)
     {
         *glb_output_uart_addr = *tmp;
         tmp ++;
@@ -71,12 +75,13 @@ void dbg_printf_ext(const char* text, ...)
     }
 
     //rc_task_enter_section();
-    g_pt->enter_critical();
+    //g_pt->enter_critical();
 
     va_list ap;
     va_start(ap, text);  
 
-    while((*tmp) != '\0')
+    int count = 0;
+    while((*tmp) != '\0' && (count ++ ) < 256)
     {
         if(*tmp == '%' && (*(tmp + 1) == 'x' || *(tmp + 1) == 'p')) {
             n = va_arg(ap, int);
@@ -107,7 +112,7 @@ void dbg_printf_ext(const char* text, ...)
     va_end(ap);
     //rc_task_exit_section();
     //rc_task_try_switch();
-    g_pt->exit_critical();
+    //g_pt->exit_critical();
 }
 
 void dbg_printf_ext_kernel(const char* text, ...)
@@ -122,7 +127,8 @@ void dbg_printf_ext_kernel(const char* text, ...)
     va_list ap;
     va_start(ap, text);  
 
-    while((*tmp) != '\0')
+    int count = 0;
+    while((*tmp) != '\0' && (count ++ ) < 256)
     {
         if(*tmp == '%' && (*(tmp + 1) == 'x' || *(tmp + 1) == 'p')) {
             n = va_arg(ap, int);

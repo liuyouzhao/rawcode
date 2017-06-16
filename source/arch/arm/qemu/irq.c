@@ -34,8 +34,8 @@ void irq()
 {
     int n = 0;
     int irq_stats = getreg32(IC_VIC_BASE);
-
-    kprintf("irq:%d %d %d\n", g_registers_asm[0], g_registers_asm[1], g_registers_asm[2]);
+    
+    //kprintf("irq:%p %p %p\n", g_registers_asm[0], g_registers_asm[1], g_registers_asm[2]);
 
     void (*vec)();
     void (*ack)();
