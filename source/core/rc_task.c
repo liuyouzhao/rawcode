@@ -73,12 +73,6 @@ static list_t s_lst_tasks;
 /* Ready list */
 static list_t s_lst_ready;
 
-/* Blocked list */
-static list_t s_lst_blcked;
-
-/* Suspended list*/
-static list_t s_lst_spded;
-
 /* Runing task */
 static rc_task_t *s_ptsk_running = 0;
 
@@ -123,8 +117,6 @@ int rc_task_init()
 
     s_lst_tasks.len = 0;
     s_lst_ready.len = 0;
-    s_lst_blcked.len = 0;
-    s_lst_spded.len = 0;
 
     s_entered = 0;
 
@@ -234,8 +226,6 @@ void rc_task_suspend()
 
     g_pt->enter_critical();
 
-    list_add_tail(&s_lst_blcked, s_ptsk_running);
-
     if(s_lst_ready.len == 0) {
         __DEBUG_ERR__("No alive task left, sys will block forever");
         s_ptsk_running = NULL;
@@ -246,6 +236,11 @@ void rc_task_suspend()
     s_ptsk_running = list_node_container(rc_task_t, *pn);
 exit:
     g_pt->exit_critical();
+}
+
+void rc_task_ready(void *tsk)
+{
+    put_to_ready_list((rc_task_t*)tsk);
 }
 
 /**

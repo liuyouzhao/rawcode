@@ -224,6 +224,11 @@ void rc_free(void *p)
     g_pt->exit_critical();
 }
 
+void rc_kfree(void *p)
+{
+    _free(p);
+}
+
 /**
  * return how many heap left
 */

@@ -35,6 +35,8 @@
 #ifndef __INCLUDE_LIST_H
 #define __INCLUDE_LIST_H
 
+#include "utils/util.h"
+
 typedef struct l_node_s
 {
     struct l_node_s *p_prev;
@@ -49,6 +51,9 @@ typedef struct list_s
     unsigned int len;
 
 }list_t;
+
+static inline l_node_t * __l_pop_head(list_t *lst);
+static inline l_node_t * __l_pop_tail(list_t *lst);
 
 static inline int __l_add_tail(list_t *lst, l_node_t *node)
 {
@@ -152,6 +157,24 @@ static inline int __l_del_tail(list_t *lst)
     return lst->len;
 }
 
+static inline int __l_del_ptr(list_t *lst, l_node_t *node)
+{
+    if(node == lst->p_head)
+    {
+        __l_pop_head(lst);
+    }
+    else if(node == lst->p_tail)
+    {
+        __l_pop_tail(lst);
+    }
+    else
+    {
+        node->p_prev->p_next = node->p_next;
+        lst->len --;
+    }
+    return lst->len;
+}
+
 static inline l_node_t * __l_pop_head(list_t *lst)
 {
     l_node_t *rt = lst->p_head;
@@ -190,6 +213,8 @@ static inline l_node_t * __l_next(l_node_t **from)
     __l_del_head(l)
 #define list_del_tail(l) \
     __l_del_tail(l)
+#define list_del_ptr(l, n) \
+    __l_del_ptr(l, n)
 #define list_pop_head(l) \
     __l_pop_head(l)
 #define list_pop_tail(l) \

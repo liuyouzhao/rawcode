@@ -61,28 +61,28 @@ asm_get_sp:
     MOV pc, lr
 
 
+/* Must in irq mode */
 .global asm_task_save_switch
-asm_task_save_switch:
-    STR     r0,  [r0]
-    STR     r1,  [r0, #4]
-    STR     r2,  [r0, #4*2]
-    STR     r3,  [r0, #4*3]
-    STR     r4,  [r0, #4*4]
-    STR     r5,  [r0, #4*5]
-    STR     r6,  [r0, #4*6]
-    STR     r7,  [r0, #4*7]
-    STR     r8,  [r0, #4*8]
-    STR     r9,  [r0, #4*9]
-    STR     r10,  [r0, #4*10]
-    STR     r11,  [r0, #4*11]
-    STR     r12,  [r0, #4*12]
-    STR     r13,  [r0, #4*13]
-    STR     r14,  [r0, #4*14]
-    STR     r15,  [r0, #4*15]
-    MRS     r5, cpsr
-    STR     r5,  [r0, #4*16]
-    MRS     r5, spsr
-    STR     r5,  [r0, #4*17]
-    MOV     r0, r1
-    B       asm_task_switch_context
+asm_task_save_context:
+    @; Reset sp address
+    LDR sp, =isr_stack_top
+
+    SUB       lr, lr, #4       @; modify LR
+
+    PUSH      {r12}     @; store AAPCS registers on to the IRQ mode stack
+    LDR       r12, =g_registers_asm
+    STMIA     r12!, {r0-r11}
+    LDR       r0, =g_registers_asm
+    POP       {r12}
+    STR       r12, [r0, #4*12]
+    STR       lr, [r0, #4*15]
+
+    @; Switch to svc mode, check all regs last task use
+    MRS       r1, cpsr
+    BIC       r1, r1, #0x1F     @; clear mode field
+    ORR       r1, r1, #0x13     @; user mode code
+    MSR       cpsr_c, r1     
+
+    STR       sp, [r0, #4*13]
+    STR       lr, [r0, #4*14]
 

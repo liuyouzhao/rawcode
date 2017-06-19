@@ -8,6 +8,7 @@
 #define VIC_INT_ENABLE (volatile unsigned int*)(IC_VIC_BASE + VIC_TIMER0)
 #define VIC_INTENABLE 0x4 /* 0x10 bytes */
 #define TICK_MS 10
+#define TICK_US 100
 
 int arch_tick_init()
 {
