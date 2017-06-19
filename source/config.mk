@@ -31,3 +31,5 @@ CFLAGS=-mcpu=$(CPU)  \
 LDFLAGS = -L$(LDIR) \
           -L$(LDIR2) \
 	  -lc -lgcc -lm 
+
+DEFS = -DCONFIG_ABTASK=0

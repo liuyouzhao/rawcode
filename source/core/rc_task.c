@@ -91,8 +91,10 @@ static int s_entered;
 /* last tick number */
 static unsigned long s_last_tick = 0;
 
+#if (!CONFIG_ABTASK)
 static rc_task_t *s_ptsk1 = 0;
 static rc_task_t *s_ptsk2 = 0;
+#endif
 
 /**
  * inner static functions
@@ -101,6 +103,11 @@ static void put_to_ready_list(rc_task_t *tsk);
 static void task_tick_switch();
 static void rc_task_sys_tick();
 static void rc_task_swi();
+
+/**
+ * mem functions
+ */
+void *rc_kmalloc(size_t size);
 
 /*
  * Task API
@@ -254,7 +261,7 @@ exit:
 */
 void rc_task_switch()
 {
-#if 0
+#if (!CONFIG_ABTASK)
     l_node_t *pn;
     rc_task_t *last;
 
@@ -286,7 +293,7 @@ void rc_task_switch()
                         s_ptsk_running->para);
 exit:
     return;
-#endif
+#else
     rc_task_t *last;
     if(s_ptsk_running == NULL) {
         s_ptsk_running = s_ptsk1;
@@ -300,6 +307,7 @@ exit:
     g_pt->task_switch(&(s_ptsk_running->regs), &(last->regs),
                     s_ptsk_running->stack_low, s_ptsk_running->stack_size,
                     s_ptsk_running->para);
+#endif
 }
 
 static void rc_task_sys_tick()
@@ -326,7 +334,7 @@ static void task_tick_switch()
 
 static void put_to_ready_list(rc_task_t *tsk)
 {
-#if 0
+#if (!CONFIG_ABTASK)
     l_node_t *p = s_lst_ready.p_head;
     rc_task_t *cur_tsk = NULL;
     while(p)
@@ -349,10 +357,11 @@ static void put_to_ready_list(rc_task_t *tsk)
         }
 
     }
-#endif
+#else
     if(s_ptsk1 == 0)
         s_ptsk1 = tsk;
     else if(s_ptsk2 == 0)
         s_ptsk2 = tsk;
+#endif
 }
 

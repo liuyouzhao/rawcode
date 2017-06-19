@@ -59,7 +59,7 @@ void task1(void* para)
 		    printf("\n");
 	    }
 #endif
-#if 0
+#if 1
         size = ((i + 1) % 10) * 128;
         ptr = (char*) rc_malloc(size);
         rc_memset(ptr, 0, size);
@@ -109,7 +109,7 @@ void task2(void* para)
 		    printf("\n");
 	    }
 #endif
-#if 0
+#if 1
         size = ((i + 1) % 10) * 128;
         ptr = (char*) rc_malloc(size);
         //rc_memset(ptr, 0, size);
@@ -152,7 +152,7 @@ void task3(void* para)
 		    printf("\n");
 	    }
 #endif
-#if 0
+#if 1
         size = ((i + 1) % 10) * 128;
         ptr = (char*) rc_malloc(size);
         rc_memset(ptr, 0, size);
@@ -168,6 +168,12 @@ void task3(void* para)
         printf("t3:%d\n", j);
     }
 }
+
+int _query_code(int);
+int _insert_code(int,int);
+void switch_svc();
+int rc_task_init();
+int rc_mm_init();
 
 int init()
 {
@@ -197,7 +203,7 @@ int init()
 
     ret = rc_task_create("task1", task1, 4096, 10, NULL);
     ret |= rc_task_create("task2", task2, 4096, 10, NULL);
-    //ret |= rc_task_create("task3", task3, 4096, 10, NULL);
+    ret |= rc_task_create("task3", task3, 4096, 10, NULL);
 
     asm_open_irq();
 
