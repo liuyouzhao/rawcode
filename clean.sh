@@ -1,2 +1,2 @@
-rm -Rf ./out
+rm -Rf ./build/out
 rm -f ./output.bin

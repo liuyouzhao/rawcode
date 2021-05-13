@@ -40,13 +40,12 @@ LD_CMD = -T $(OUT_DIR)/$(LD_LINKER)
 OC_CMD = -O binary
 endif
 
-
 all: compile raw
 compile: $(C_OBJS)
 raw:
 	$(LD) $(LD_CMD) $(C_OBJS) $(S_OBJS) -o $(OUT_DIR)/$(OUT_BIN).elf $(LDFLAGS)
-	$(OC) $(OC_CMD) $(OUT_DIR)/$(OUT_BIN).elf $(PRE_ROOT)/$(OUT_BIN)
+	$(OC) $(OC_CMD) $(OUT_DIR)/$(OUT_BIN).elf $(ROOT)/$(OUT_BIN)
 
 .PHONY: clean
 clean:
-	rm -rf ./out ./output.bin
+	rm -rf ./build/out ./output
