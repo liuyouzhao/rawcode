@@ -77,6 +77,6 @@ typedef struct port_s
 
 } port_t;
 
-port_t *g_pt;
+extern port_t *g_pt;
 
 #endif /* __INCLUDE_PORT_H */

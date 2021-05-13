@@ -103,6 +103,8 @@ typedef struct rc_mm_cache_s
     
 } rc_mm_cache_t;
 
+
+
 /* 
  * s_slab_unit
  * slab unit is the unit-size of each slab, 
@@ -111,6 +113,7 @@ typedef struct rc_mm_cache_s
  *             3rd 64B*3=192B,
  *             ....
 */
+port_t *g_pt;
 static unsigned int s_slab_unit;
 
 /* 2^s_slab_para == s_slab_unit */
