@@ -22,13 +22,13 @@ include filelist.mk
 C_OBJS =
 S_OBJS =
 
-$(shell mkdir $(OUT_DIR) -p)
+$(shell mkdir -p $(OUT_DIR))
 $(foreach c, $(C_FILES), \
-	$(shell mkdir $(OUT_DIR)/$(c:%c=%dump) -p) \
+	$(shell mkdir -p $(OUT_DIR)/$(c:%c=%dump)) \
 	$(shell $(CC) -o $(OUT_DIR)/$(c:%c=%o) -c $c $(CFLAGS)) \
 	$(eval C_OBJS += $(OUT_DIR)/$(c:%c=%o)) )
 $(foreach s, $(S_FILES), \
-	$(shell mkdir $(OUT_DIR)/$(s:%s=%dump) -p) \
+	$(shell mkdir -p $(OUT_DIR)/$(s:%s=%dump)) \
 	$(shell $(AS) $(AFLAGS) $(s) -o $(OUT_DIR)/$(s:%s=%o)) \
 	$(eval S_OBJS += $(OUT_DIR)/$(s:%s=%o)) )
 LD_CMD =

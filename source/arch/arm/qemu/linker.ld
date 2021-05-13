@@ -39,8 +39,8 @@ ENTRY(_start)
 SECTIONS
 {
 . = 0x10000;
-/* the startup.o in out/arm/boot */
-startup : { ../out/arm/arch/arm/qemu/startup.o(.text)}
+/* the startup.o in out/build */
+startup : { ../build/out/startup.o(.text)}
 .data : {*(.data)}
 .bss : {*(.bss)}
 . = ALIGN(8);
