@@ -5,4 +5,4 @@ Run in qemu
 [3]boot is init 
 
 Run Command:
-qemu-system-arm -M versatilepb -nographic -kernel output.bin
+qemu-system-arm -M versatilepb -nographic -kernel output
