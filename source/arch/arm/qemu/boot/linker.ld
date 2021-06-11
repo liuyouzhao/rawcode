@@ -40,7 +40,7 @@ SECTIONS
 {
 . = 0x10000;
 /* the startup.o in out/arm/boot */
-startup : { ../build/out/arch/arm/qemu/startup.o(.text)}
+startup : { ../build/out/arch/arm/qemu/boot/startup.o(.text)}
 .data : {*(.data)}
 .bss : {*(.bss)}
 . = ALIGN(8);

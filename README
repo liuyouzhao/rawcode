@@ -6,3 +6,6 @@ Run in qemu
 
 Run Command:
 qemu-system-arm -M versatilepb -nographic -kernel output
+
+Kill:
+ps -A |grep qemu-system-arm |awk '{print $1}' |xargs -I {} kill {}

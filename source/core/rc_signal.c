@@ -1,8 +1,8 @@
 /********************************************************************************
  * core/rc_mem.c
  *
- *   Copyright (C) 2016,2017 Frodo Liu. All rights reserved.
- *   Author: Frodo Liu <liuyouzhao@hotmail.com>
+ *   Copyright (C) 2016,2017 Steven Liu. All rights reserved.
+ *   Author: Steven Liu <liuyouzhao@hotmail.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

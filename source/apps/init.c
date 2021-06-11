@@ -133,6 +133,8 @@ int rc_mm_init();
 
 int init()
 {
+    int ret;
+
     arch_init();
     rc_task_init();
     rc_mm_init();
@@ -142,6 +144,8 @@ int init()
     ret = rc_task_create("task1", task1, 4096, 10, NULL);
     ret |= rc_task_create("task2", task2, 4096, 10, NULL);
     ret |= rc_task_create("task3", task3, 4096, 10, NULL);
+
+	kprintf("rc_task_create status: %d\n", ret);
 
     asm_open_irq();
 

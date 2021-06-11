@@ -42,13 +42,13 @@ C_FILES += $(C_TEST_FILES)
 C_FILES += $(C_APPS_FILES)
 
 ### ASM files
-S_BOOT_FILES = arch/$(PLATFORM)/$(BOARD)/startup.s
+S_BOOT_FILES = arch/$(PLATFORM)/$(BOARD)/boot/startup.s
 
-S_CORE_FILES = arch/$(PLATFORM)/$(BOARD)/mpu.s \
-               arch/$(PLATFORM)/$(BOARD)/port.s
+S_CORE_FILES = arch/$(PLATFORM)/$(BOARD)/asm/mpu.s \
+               arch/$(PLATFORM)/$(BOARD)/asm/port.s
 
 S_FILES += $(S_BOOT_FILES)
 S_FILES += $(S_CORE_FILES)
 
 ### linker file
-LD_LINKER = arch/$(PLATFORM)/$(BOARD)/linker.ld
+LD_LINKER = arch/$(PLATFORM)/$(BOARD)/boot/linker.ld

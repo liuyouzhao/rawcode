@@ -57,4 +57,4 @@ LDFLAGS = -L$(LDIR) \
           -L$(LDIR2) \
 	  -lc -lgcc -lm 
 
-DEFS = -DCONFIG_ABTASK=0
+DEFS = -DCONFIG_ABTASK=0 -DCONFIG_DEBUG_ENABLE=1
