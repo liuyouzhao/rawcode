@@ -6,15 +6,15 @@ A simple RTOS kernel with arm board adaptation. It can be a starter of your cust
 ### How to run? ###
 Preparations:
 
-[1] Find ARM cross-build toolchain for your building host here:
+#### [1] Find ARM cross-build toolchain for your building host here: ####
 
 https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads
 
-[2] Download the correct toolchain package. As I use linux-x64, my correct package is the below one.
+#### [2] Download the correct toolchain package. As I use linux-x64, my correct package is the below one. ####
 
 arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi.tar.xz
 
-[3] Copy the downloaded toolchain to build folder. Then unzip the package to build/toolchain
+#### [3] Copy the downloaded toolchain to build folder. Then unzip the package to build/toolchain ####
 
 mkdir <Project Folder>/build/toolchain
 
@@ -24,7 +24,7 @@ cd <Project Folder>/build/toolchain
 
 tar -xvf ./arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi.tar.xz
 
-[4] Rename the folder in the toolchain to arm in build/toolchain
+#### [4] Rename the folder in the toolchain to arm in build/toolchain ####
 
 mv ./arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi ./arm
 
@@ -32,7 +32,7 @@ Make sure the compilers are in <Project Folder>/build/toolchain/arm/bin/
 
 Make sure the lib files are in <Project Folder>/build/toolchain/arm/lib/gcc/arm-none-eabi/12.2.1/
 
-[5] Update variables in <Project Folder>/configuration
+#### [5] Update variables in <Project Folder>/configuration ####
 
 CPU=arm926ej-s //Set the cpu, arm926ej-s is the only tested one.
 
