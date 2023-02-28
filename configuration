@@ -29,7 +29,7 @@ PLATFORM=arm
 TOOLCHAIN=$(ROOT)/$(BUILD)/toolchain
 
 TOOLCHAIN_BIN=$(TOOLCHAIN)/$(PLATFORM)/bin
-
+TOOLCHAIN_VERSION=12.2.1
 
 ## toolchain declare
 CC=$(TOOLCHAIN_BIN)/$(PLATFORM)-none-eabi-gcc
@@ -37,7 +37,7 @@ AS=$(TOOLCHAIN_BIN)/$(PLATFORM)-none-eabi-as
 LD=$(TOOLCHAIN_BIN)/$(PLATFORM)-none-eabi-ld
 OC=$(TOOLCHAIN_BIN)/$(PLATFORM)-none-eabi-objcopy
 LDIR=$(TOOLCHAIN)/arm/arm-none-eabi/lib
-LDIR2=$(TOOLCHAIN)/arm/lib/gcc/arm-none-eabi/4.9.3
+LDIR2=$(TOOLCHAIN)/arm/lib/gcc/arm-none-eabi/$(TOOLCHAIN_VERSION)
 
 ## output dir
 OUT_DIR=../$(BUILD)/out
